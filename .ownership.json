@@ -1,0 +1,16 @@
+{
+"repository_name": "ios-tptweak",
+"description": "Code base for TPTweak Library. Tweak your ios app on the fly without restarting app",
+"directorate": "Technology",
+"namespace": "ios",
+"security_owner": "andrey.manik@tokopedia.com",
+"app": [
+{
+"name": "ios-tptweak",
+"description": "TPTweak Library",
+"owner": "andrey.manik@tokopedia.com",
+"slack_channel": "teamios"
+}
+],
+"last_update":"15/06/2022"
+}
