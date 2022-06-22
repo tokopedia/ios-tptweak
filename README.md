@@ -43,6 +43,7 @@ TPTweakEntry(
 
 ### TPTweakEntry type
 **Switch**
+
 ![](assets/switch.png)
 Using this type, you can create a cell with a UISwitch to enable/disable an option.You could also supply default value, if no value detected.
 
@@ -51,6 +52,7 @@ Using this type, you can create a cell with a UISwitch to enable/disable an opti
 ```
 
 **Strings**
+
 ![](assets/strings.png)
 Using this type, you can create a selection of strings.When user tap the options, it will automatically open the selection.
 
@@ -59,6 +61,7 @@ Using this type, you can create a selection of strings.When user tap the options
 ```
 
 **Numbers**
+
 ![](assets/numbers.png)
 Using this type, you can create a selectio of numbers.When user tap the options, it will automatically open the selection.
 
@@ -67,6 +70,7 @@ Using this type, you can create a selectio of numbers.When user tap the options,
 ```
 
 **Action**
+
 ![](assets/action.png)
 Using this type, it gives you the flexibility to do everything. with given `closure`, you can for example, open custom page you create, or executing a `UserDefaults`, or more.
 
