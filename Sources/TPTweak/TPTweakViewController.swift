@@ -24,8 +24,11 @@ public final class TPTweakWithNavigatationViewController: UINavigationController
             viewControllers = [TPTweakViewController()]
         }
 
-        navigationBar.prefersLargeTitles = false
-        navigationItem.largeTitleDisplayMode = .never
+        if #available(iOS 12.0, *) {
+            navigationController?.navigationBar.prefersLargeTitles = false
+            navigationController?.navigationItem.largeTitleDisplayMode = .never
+        }
+        
         navigationBar.isTranslucent = false
         navigationBar.sizeToFit()
 
@@ -78,7 +81,7 @@ public final class TPTweakViewController: UIViewController {
     public init() {
         super.init(nibName: nil, bundle: nil)
 
-        title = "Tokopedia Tweaks"
+        title = "TPTweaks"
         view.backgroundColor = .white
 
         setupView()

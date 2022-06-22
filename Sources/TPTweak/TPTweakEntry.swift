@@ -108,17 +108,3 @@ public struct TPTweakEntry {
         TPTweakStore.add(self)
     }
 }
-
-// Default entry used by all cases
-
-extension TPTweakEntry {
-    public static var baseURL: Self {
-        TPTweakEntry(
-            category: "Network",
-            section: "Environment",
-            cell: "Base URL",
-            footer: "Require Restart to apply the effect",
-            type: .strings(item: ["Production", "Staging"], selected: "Production")
-        )
-    }
-}

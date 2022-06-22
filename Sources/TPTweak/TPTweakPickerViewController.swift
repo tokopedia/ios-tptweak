@@ -49,7 +49,7 @@ internal final class TPTweakPickerViewController: UIViewController {
         self.data = data
         super.init(nibName: nil, bundle: nil)
 
-        title = "Tokopedia Tweaks"
+        title = "TPTweaks"
         view.backgroundColor = .white
 
         setupView()
@@ -62,9 +62,11 @@ internal final class TPTweakPickerViewController: UIViewController {
 
     override internal func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
-        navigationController?.navigationBar.prefersLargeTitles = false
-        navigationController?.navigationItem.largeTitleDisplayMode = .never
+        
+        if #available(iOS 12.0, *) {
+            navigationController?.navigationBar.prefersLargeTitles = false
+            navigationController?.navigationItem.largeTitleDisplayMode = .never
+        }
     }
 
     internal required init?(coder _: NSCoder) {
