@@ -1,7 +1,7 @@
 # TPTweak
 
 TPTweak is a debugging tool to help adjust your iOS app on the fly without recompile.
-inspired by facebook's [Tweak](https://github.com/facebookarchive/Tweaks), TPTweak fully written in swift, and with simpler API.
+inspired by facebook's [Tweak](https://github.com/facebookarchive/Tweaks), TPTweak is fully written in swift, and with simpler API.
 
 |Example of TPTweak|Selecting options of string|Selecting options of number|
 |----|----|----|
