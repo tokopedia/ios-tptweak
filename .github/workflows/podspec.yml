@@ -9,7 +9,7 @@ on:
       - '*'
 
 jobs:
-  podspec:      
+  linting:      
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v2

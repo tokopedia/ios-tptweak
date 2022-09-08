@@ -9,12 +9,13 @@ on:
       - '*'
 
 jobs:
-  build:
+  build-big-sur:
     strategy:
       matrix:
         xcode:
-          - '12.5.1'
-          - '13.4.1'         
+          - '11.7'
+          - '12.4'
+          - '12.5.1'         
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v2
@@ -22,12 +23,45 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
       - name: Run Build
         run: swift build
-  unit_test:
+  unit_test-big-sur:
     strategy:
       matrix:
         xcode:
-          - '12.5.1'
-          - '13.4.1'         
+          - '11.7'
+          - '12.4'
+          - '12.5.1'   
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v2
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Run tests
+        run: swift test --enable-test-discovery --enable-code-coverage | xcpretty
+  build-monterey:
+    strategy:
+      matrix:
+        xcode:
+          - '13.1'
+          - '13.2.1'
+          - '13.3.1'
+          - '13.4.1'    
+          - '14.0'         
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v2
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Run Build
+        run: swift build
+  unit_test-monterey:
+    strategy:
+      matrix:
+        xcode:
+          - '13.1'
+          - '13.2.1'
+          - '13.3.1'
+          - '13.4.1'    
+          - '14.0'     
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v2
