@@ -8,7 +8,7 @@ Pod::Spec.new do |spec|
   spec.homepage       = "https://github.com/tokopedia/ios-tptweak"
 
   spec.platform       = :ios, "11.0"
-  spec.swift_versions = ["5.5"]
+  spec.swift_versions = ["5.4"]
   spec.source         = { :git => "https://github.com/tokopedia/ios-tptweak.git", :tag => "#{spec.version}" }
   spec.source_files   = "Sources/TPTweak/**/*.swift"
 

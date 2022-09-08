@@ -19,6 +19,12 @@ or manually add to your `Package.swift`
 .package(url: "https://github.com/tokopedia/ios-tptweak", from: "1.0.0"),
 ```
 
+# Cocoapods
+add this to your `Podfile`
+```
+pod 'TPTweak', '~> 1.0.0'
+```
+
 # Nomenclature
 `TPTweakEntry` = Representation of option on TPTweak
 
