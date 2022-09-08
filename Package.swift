@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "ios-tptweak",
+    platforms: [.iOS(.v10)],
     products: [
         .library(
             name: "TPTweak",
