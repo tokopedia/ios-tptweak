@@ -94,6 +94,3 @@ class ViewController: UIViewController {
         """
     }
 }
-
-
-UIViewController().navigationController?.pushViewController(<#T##viewController: UIViewController##UIViewController#>, animated: <#T##Bool#>)
