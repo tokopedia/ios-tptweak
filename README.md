@@ -147,6 +147,21 @@ internal final class AppDelegate: UIResponder, UIApplicationDelegate {
 
 ```
 
+## Use TPTweak Value
+Once your TPTweakEntry is set, you can get and set a value from it.
+
+### Read value
+```
+// will return true or false based on latest value changed on TPTweak
+let isTrackingEnable = TPTweakEntry.enableTracking.getValue(Bool.self) 
+```
+
+### Set value
+if you want to set the value manually programmatically
+```
+TPTweakEntry.enableTracking.setValue(true)
+```
+
 # License
 ```
  Copyright 2022 Tokopedia. All rights reserved.
