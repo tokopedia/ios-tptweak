@@ -18,7 +18,7 @@ import Foundation
  Entry type, pick your poison
  */
 public enum TPTweakEntryType {
-    case `switch`(defaultValue: Bool)
+    case `switch`(defaultValue: Bool, closure: ((Bool) -> Void)? = nil)
     case action(() -> Void)
     case strings(item: [String], selected: String)
     case numbers(item: [Double], selected: Double)

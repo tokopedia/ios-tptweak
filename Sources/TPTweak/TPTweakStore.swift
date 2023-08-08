@@ -120,7 +120,7 @@ public enum TPTweakStore {
         /// indicate no value exist before on provider
         if environment.provider().data(forKey: identifier) == nil {
             switch entry.type {
-            case let .switch(defaultValue):
+            case let .switch(defaultValue, _):
                 set(defaultValue, identifier: identifier)
             case let .numbers(_, defaultValue):
                 set(defaultValue, identifier: identifier)
