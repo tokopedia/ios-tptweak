@@ -57,6 +57,15 @@ Using this type, you can create a cell with a UISwitch to enable/disable an opti
 .switch(defaultValue: true)
 ```
 
+
+You could also add `closure: ((Bool) -> Void)?` that will run **after** the value is changed.
+
+```swift
+.switch(defaultValue: true, closure: { isToggledOn in
+    UserDefaults.standard.set(isToggledOn, forKey: "myvalue_is_on")
+})
+```
+
 **Strings**
 
 ![](assets/strings.png)

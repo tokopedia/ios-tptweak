@@ -54,6 +54,20 @@ extension TPTweakEntry {
         type: .strings(item: ["US", "UK", "SG"], selected: "SG")
     )
     
+    static let trackingUsingLocale = TPTweakEntry(
+        category: "Tracking",
+        section: "Locale",
+        cell: "Using Locale",
+        footer: "Enabled this to let the tracker send data about your locale",
+        type: .switch(defaultValue: false, closure: { isUsingLocale in
+            if isUsingLocale {
+                UserDefaults.standard.set(Locale.current.identifier, forKey: "tracker_locale")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "tracker_locale")
+            }
+        })
+    )
+    
     static let changeLanguage = TPTweakEntry(
         category: "Apperance",
         section: "Language",

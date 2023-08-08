@@ -91,6 +91,9 @@ class ViewController: UIViewController {
         Tracking status: \(TPTweakEntry.enableTracking.getValue(Bool.self))
         Tracking server location: \(TPTweakEntry.trackingServerLocation.getValue(String.self))
         Tracking max timeout: \(TPTweakEntry.trackingTimeout.getValue(Int.self))
+        
+        Tracking locale is active: \(TPTweakEntry.trackingUsingLocale.getValue(Bool.self))
+        Tracking locale identifer: \((UserDefaults.standard.value(forKey: "tracker_locale") as? String) ?? "no locale")
         """
     }
 }

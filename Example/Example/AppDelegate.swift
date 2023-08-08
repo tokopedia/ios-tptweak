@@ -28,6 +28,7 @@ internal final class AppDelegate: UIResponder, UIApplicationDelegate {
         TPTweakEntry.trackingTimeout.register()
         TPTweakEntry.trackingHistory.register()
         TPTweakEntry.trackingServerLocation.register()
+        TPTweakEntry.trackingUsingLocale.register()
         TPTweakEntry.changeLanguage.register()
 
         let viewController = ViewController()
