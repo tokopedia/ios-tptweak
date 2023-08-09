@@ -152,12 +152,13 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
         switch cellData.type {
         case let .action(closure):
             closure()
-        case .switch:
+        case let .switch(_, closure):
             var value = TPTweakStore.read(type: Bool.self, identifier: cellData.identifer) ?? false
             value.toggle()
 
             TPTweakStore.set(value, identifier: cellData.identifer)
             tableView.reloadRows(at: [indexPath], with: .automatic) // to update cell value after action
+            closure?(value)
         case let .numbers(item, defaultValue):
             let viewController = TPTweakOptionsViewController(
                 title: cellData.name,
