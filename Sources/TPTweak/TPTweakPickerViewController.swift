@@ -20,8 +20,33 @@ import UIKit
  */
 internal final class TPTweakPickerViewController: UIViewController {
     // MARK: - Values
-
-    private var data: [Section] = []
+    private var searchKeyword: String? = nil
+    private var _data: [Section] = []
+    private var data: [Section] {
+        get {
+            guard let searchKeyword = searchKeyword, searchKeyword != "" else {
+                return _data
+            }
+            
+            var filteredData = [Section]()
+            
+            for section in _data {
+                let newCell = section.cells.filter { $0.name.lowercased().contains(searchKeyword) }
+                
+                // skip if this section's cell does not have any matching cell
+                if newCell.isEmpty { continue }
+                
+                let newSection = Section(name: section.name, footer: section.footer, cells: newCell)
+                filteredData.append(newSection)
+            }
+            
+            return filteredData
+        }
+        
+        set {
+            _data = newValue
+        }
+    }
 
     // MARK: - Views
 
@@ -46,9 +71,9 @@ internal final class TPTweakPickerViewController: UIViewController {
     // MARK: - Life Cycle
 
     internal init(data: [Section]) {
-        self.data = data
         super.init(nibName: nil, bundle: nil)
-
+        
+        self.data = data
         title = "TPTweaks"
         view.backgroundColor = .white
 
@@ -85,6 +110,28 @@ internal final class TPTweakPickerViewController: UIViewController {
             table.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
+    
+    internal func setData(data: [Section]) {
+        self.data = data
+        self.table.reloadData()
+    }
+    
+    private func openDetail(viewController: UIViewController) {
+        if searchKeyword != nil, searchKeyword != "" {
+            let navigationController = UINavigationController(rootViewController: viewController)
+            self.present(navigationController, animated: true)
+        } else {
+            navigationController?.pushViewController(viewController, animated: true)
+        }
+    }
+    
+    private func closeDetail(viewController: UIViewController) {
+        if searchKeyword != nil, searchKeyword != "" {
+            viewController.dismiss(animated: true)
+        } else {
+            navigationController?.popToViewController(self, animated: true)
+        }
+    }
 }
 
 extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegate {
@@ -106,6 +153,7 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
         switch cellData.type {
         case .action:
             cell.textLabel?.text = cellData.name
+            cell.detailTextLabel?.text = nil
             cell.accessoryType = .disclosureIndicator
         case .switch:
             let switcher = UISwitch()
@@ -113,6 +161,7 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
             switcher.isUserInteractionEnabled = false
 
             cell.textLabel?.text = cellData.name
+            cell.detailTextLabel?.text = nil
             cell.accessoryView = switcher
         case let .strings(_, defaultValue):
             let currentValue = TPTweakStore.read(type: String.self, identifier: cellData.identifer) ?? defaultValue
@@ -157,7 +206,7 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
             value.toggle()
 
             TPTweakStore.set(value, identifier: cellData.identifer)
-            tableView.reloadRows(at: [indexPath], with: .automatic) // to update cell value after action
+            tableView.reloadRows(at: [indexPath], with: .none) // to update cell value after action
             closure?(value)
         case let .numbers(item, defaultValue):
             let viewController = TPTweakOptionsViewController(
@@ -166,16 +215,16 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
                 defaultSelected: TPTweakStore.read(type: Double.self, identifier: cellData.identifer) ?? defaultValue
             )
 
-            viewController.didChoose = { [weak tableView, weak navigationController, weak self] newValue in
+            viewController.didChoose = { [weak tableView, weak self] newValue in
                 TPTweakStore.set(newValue, identifier: cellData.identifer)
                 tableView?.reloadRows(at: [indexPath], with: .automatic) // to update cell value after action
 
                 if let self = self {
-                    navigationController?.popToViewController(self, animated: true) // back to picker
+                    self.closeDetail(viewController: viewController) // back to picker
                 }
             }
 
-            navigationController?.pushViewController(viewController, animated: true)
+            openDetail(viewController: viewController)
         case let .strings(item, defaultValue):
             let viewController = TPTweakOptionsViewController(
                 title: cellData.name,
@@ -183,19 +232,27 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
                 defaultSelected: TPTweakStore.read(type: String.self, identifier: cellData.identifer) ?? defaultValue
             )
 
-            viewController.didChoose = { [weak tableView, weak navigationController, weak self] newValue in
+            viewController.didChoose = { [weak tableView, weak self] newValue in
                 TPTweakStore.set(newValue, identifier: cellData.identifer)
                 tableView?.reloadRows(at: [indexPath], with: .automatic) // to update cell value after action
 
                 if let self = self {
-                    navigationController?.popToViewController(self, animated: true) // back to picker
+                    self.closeDetail(viewController: viewController) // back to picker
                 }
             }
 
-            navigationController?.pushViewController(viewController, animated: true)
+            openDetail(viewController: viewController)
         }
     }
 }
+
+extension TPTweakPickerViewController: UISearchResultsUpdating {
+    public func updateSearchResults(for searchController: UISearchController) {
+        searchKeyword = searchController.searchBar.text?.lowercased()
+        table.reloadData()
+    }
+}
+
 
 extension TPTweakPickerViewController {
     internal struct Section {

@@ -25,8 +25,8 @@ public final class TPTweakWithNavigatationViewController: UINavigationController
         }
 
         if #available(iOS 12.0, *) {
-            navigationController?.navigationBar.prefersLargeTitles = false
-            navigationController?.navigationItem.largeTitleDisplayMode = .never
+            navigationBar.prefersLargeTitles = false
+            navigationItem.largeTitleDisplayMode = .never
         }
         
         navigationBar.isTranslucent = false
@@ -72,6 +72,27 @@ public final class TPTweakViewController: UIViewController {
 
         return view
     }()
+    
+    private lazy var searchResultViewController = TPTweakPickerViewController(data: [.init(name: "Foo", footer: "hello World", cells: [.init(name: "Bar", identifer: "bar", type: .action({}))])])
+    
+    private lazy var searchController: UISearchController = {
+        let searchController = UISearchController(searchResultsController: searchResultViewController)
+        
+        if #available(iOS 13.0, *) {
+            searchController.showsSearchResultsController = true
+        }
+        
+        searchController.searchResultsUpdater = searchResultViewController
+        searchController.delegate = self
+        searchController.searchBar.placeholder = " Search..."
+        searchController.searchBar.searchBarStyle = .prominent
+        searchController.dimsBackgroundDuringPresentation = false
+        searchController.hidesNavigationBarDuringPresentation = false
+        searchController.searchBar.sizeToFit()
+        
+       return searchController
+    }()
+    
 
     private lazy var doneBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(dismissSelf))
     private lazy var resetBarButtonItem = UIBarButtonItem(title: "Reset", style: .plain, target: self, action: #selector(resetAll))
@@ -90,11 +111,17 @@ public final class TPTweakViewController: UIViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
 
-        fetchData()
+        data = fetchData()
+        searchResultViewController.setData(data: [TPTweakPickerViewController.Section]())
+        
+        
         table.reloadData()
 
         navigationItem.leftBarButtonItem = doneBarButtonItem
         navigationItem.rightBarButtonItem = resetBarButtonItem
+        
+        navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false
     }
 
     public required init?(coder _: NSCoder) {
@@ -114,7 +141,7 @@ public final class TPTweakViewController: UIViewController {
         ])
     }
 
-    private func fetchData() {
+    private func fetchData() -> [Row] {
         var normalizedEntries = [String: [TPTweakEntry]]()
 
         TPTweakStore.entries
@@ -133,9 +160,41 @@ public final class TPTweakViewController: UIViewController {
                 Row(name: key, entries: value)
             }
 
-        data = rows
+        return rows
     }
+    
+    private func convertRowToSection(row: Row) -> [TPTweakPickerViewController.Section] {
+        var normalizedEntries = [String: [TPTweakEntry]]()
+        
+        row.entries
+            .sorted(by: { $0.cell < $1.cell })
+            .forEach { entry in
+                if normalizedEntries[entry.section] == nil {
+                    normalizedEntries[entry.section] = []
+                }
 
+                normalizedEntries[entry.section]?.append(entry)
+            }
+
+        let data: [TPTweakPickerViewController.Section] = normalizedEntries
+            .sorted(by: { $0.key < $1.key })
+            .map { key, value in
+                var footers = [String]()
+                var cells = [TPTweakPickerViewController.Cell]()
+
+                for entry in value {
+                    cells.append(TPTweakPickerViewController.Cell(name: entry.cell, identifer: entry.getIdentifier(), type: entry.type))
+
+                    if let footer = entry.footer {
+                        footers.append(footer)
+                    }
+                }
+
+                return TPTweakPickerViewController.Section(name: key, footer: footers.last, cells: cells)
+            }
+        
+        return data
+    }
     @objc
     private func dismissSelf() {
         dismiss(animated: true)
@@ -170,6 +229,11 @@ public final class TPTweakViewController: UIViewController {
         confirmationDialog.addAction(cancelAction)
 
         present(confirmationDialog, animated: true)
+    }
+    
+    @objc
+    private func dismissKeyboard() {
+        searchController.searchBar.endEditing(true)
     }
 }
 
@@ -225,6 +289,19 @@ extension TPTweakViewController: UITableViewDataSource, UITableViewDelegate {
         let viewController = TPTweakPickerViewController(data: data)
         viewController.title = cell.name
         navigationController?.pushViewController(viewController, animated: true)
+    }
+}
+
+
+extension TPTweakViewController: UISearchControllerDelegate {
+    public func presentSearchController(_ searchController: UISearchController) {
+        var sections = [TPTweakPickerViewController.Section]()
+        
+        for row in data {
+            sections.append(contentsOf: convertRowToSection(row: row))
+        }
+        
+        searchResultViewController.setData(data: sections)
     }
 }
 
