@@ -139,7 +139,7 @@ internal final class TPTweakPickerViewController: UIViewController {
         }
     }
     
-    private func isFavourite(identifier: String) -> Bool {
+    internal static func isFavourite(identifier: String) -> Bool {
         let favourites = TPTweakEntry.favourite.getValue(Set<String>.self) ?? []
         return favourites.contains(where: { $0 == identifier })
     }
@@ -159,7 +159,7 @@ internal final class TPTweakPickerViewController: UIViewController {
     }
     
     private func createFavouriteSwipeButton(identifier: String) -> UIContextualAction {
-        if isFavourite(identifier: identifier) {
+        if Self.isFavourite(identifier: identifier) {
             let action = UIContextualAction(style: .normal, title: "Remove Favourite") { [weak self] _, _, success in
                 self?.removeFavourite(identifier: identifier)
                 success(true)
@@ -185,6 +185,28 @@ internal final class TPTweakPickerViewController: UIViewController {
             action.backgroundColor = .systemBlue
             
             return action
+        }
+    }
+    
+    @available(iOS 13.0, *)
+    private func createContextualMenu(identifier: String) -> UIAction {
+        if Self.isFavourite(identifier: identifier) {
+            return UIAction(
+                title: "Unfavourite",
+                image: UIImage(systemName: "star.slash"),
+                identifier: nil,
+                attributes: .destructive
+            ) { [weak self] _ in
+                self?.removeFavourite(identifier: identifier)
+            }
+        } else {
+            return UIAction(
+                title: "Favourite",
+                image: UIImage(systemName: "star"),
+                identifier: nil
+            ) { [weak self] _ in
+                self?.setFavourite(identifier: identifier)
+            }
         }
     }
 }
@@ -311,6 +333,19 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
         let cellData = data[indexPath.section].cells[indexPath.row]
         let action = createFavouriteSwipeButton(identifier: cellData.identifer)
         return UISwipeActionsConfiguration(actions: [action])
+    }
+    
+    @available(iOS 13.0, *)
+    func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        let cellData = data[indexPath.section].cells[indexPath.row]
+        
+        return UIContextMenuConfiguration(
+            identifier: nil,
+            previewProvider: nil,
+            actionProvider: { _ in
+                return UIMenu(title: "", children: [self.createContextualMenu(identifier: cellData.identifer)])
+            }
+        )
     }
 }
 
