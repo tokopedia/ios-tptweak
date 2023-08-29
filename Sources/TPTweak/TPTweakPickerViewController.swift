@@ -24,10 +24,12 @@ internal final class TPTweakPickerViewController: UIViewController {
     private var _data: [Section] = []
     private var data: [Section] {
         get {
+            // if keyword does not exist, use full data
             guard let searchKeyword = searchKeyword, searchKeyword != "" else {
                 return _data
             }
             
+            // filter section based on if cell name contain keyword or not
             var filteredData = [Section]()
             
             for section in _data {

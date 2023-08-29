@@ -86,6 +86,7 @@ public final class TPTweakViewController: UIViewController {
         searchController.delegate = self
         searchController.searchBar.placeholder = " Search..."
         searchController.searchBar.searchBarStyle = .prominent
+        searchController.searchBar.isTranslucent = false
         searchController.dimsBackgroundDuringPresentation = false
         searchController.hidesNavigationBarDuringPresentation = false
         searchController.searchBar.sizeToFit()
@@ -112,8 +113,7 @@ public final class TPTweakViewController: UIViewController {
         super.viewDidLoad()
 
         data = fetchData()
-        searchResultViewController.setData(data: [TPTweakPickerViewController.Section]())
-        
+        searchResultViewController.setData(data: [])
         
         table.reloadData()
 
@@ -257,34 +257,7 @@ extension TPTweakViewController: UITableViewDataSource, UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
 
         let cell = data[indexPath.row]
-        var normalizedEntries = [String: [TPTweakEntry]]()
-
-        cell.entries
-            .sorted(by: { $0.cell < $1.cell })
-            .forEach { entry in
-                if normalizedEntries[entry.section] == nil {
-                    normalizedEntries[entry.section] = []
-                }
-
-                normalizedEntries[entry.section]?.append(entry)
-            }
-
-        let data: [TPTweakPickerViewController.Section] = normalizedEntries
-            .sorted(by: { $0.key < $1.key })
-            .map { key, value in
-                var footers = [String]()
-                var cells = [TPTweakPickerViewController.Cell]()
-
-                for entry in value {
-                    cells.append(TPTweakPickerViewController.Cell(name: entry.cell, identifer: entry.getIdentifier(), type: entry.type))
-
-                    if let footer = entry.footer {
-                        footers.append(footer)
-                    }
-                }
-
-                return TPTweakPickerViewController.Section(name: key, footer: footers.last, cells: cells)
-            }
+        let data = convertRowToSection(row: cell)
 
         let viewController = TPTweakPickerViewController(data: data)
         viewController.title = cell.name
