@@ -7,6 +7,11 @@ inspired by facebook's [Tweak](https://github.com/facebookarchive/Tweaks), TPTwe
 |----|----|----|----|
 |![](assets/tptweak_home.png)|![](assets/tptweak_string_selection_example.png)|![](assets/tptweak_number_selection_example.png)|![Simulator Screenshot - iPhone 14 Pro - 2023-08-29 at 16 57 39](https://github.com/tokopedia/ios-tptweak/assets/16457495/02dbd7d6-0fa3-4a44-85b0-dfc52501b3b6)|
 
+
+|Set Favourite by swipe|Set Favourite by long press|Favourite Page|
+|----|----|----|
+|![Simulator Screenshot - iPhone 14 Pro - 2023-08-29 at 19 07 10](https://github.com/tokopedia/ios-tptweak/assets/16457495/1580305b-1667-4005-ab61-ff03ff419bd8)|![Simulator Screenshot - iPhone 14 Pro - 2023-08-29 at 19 16 06](https://github.com/tokopedia/ios-tptweak/assets/16457495/a8be171b-fcf7-4923-9c2f-bca646f39919)|![Simulator Screenshot - iPhone 14 Pro - 2023-08-29 at 19 07 04](https://github.com/tokopedia/ios-tptweak/assets/16457495/5562f00e-22e7-4ab3-8a6d-237dbcfa596c)|
+
 # Installation
 ## Swift Package Manager
 With xcode, add this URL

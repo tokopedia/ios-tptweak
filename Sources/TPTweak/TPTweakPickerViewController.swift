@@ -138,6 +138,77 @@ internal final class TPTweakPickerViewController: UIViewController {
             navigationController?.popToViewController(self, animated: true)
         }
     }
+    
+    internal static func isFavourite(identifier: String) -> Bool {
+        let favourites = TPTweakEntry.favourite.getValue(Set<String>.self) ?? []
+        return favourites.contains(where: { $0 == identifier })
+    }
+    
+    private func setFavourite(identifier: String) {
+        var favourites = TPTweakEntry.favourite.getValue(Set<String>.self) ?? []
+        favourites.insert(identifier)
+        
+        TPTweakEntry.favourite.setValue(favourites)
+    }
+    
+    private func removeFavourite(identifier: String) {
+        var favourites = TPTweakEntry.favourite.getValue(Set<String>.self) ?? []
+        favourites.remove(identifier)
+        
+        TPTweakEntry.favourite.setValue(favourites)
+    }
+    
+    private func createFavouriteSwipeButton(identifier: String) -> UIContextualAction {
+        if Self.isFavourite(identifier: identifier) {
+            let action = UIContextualAction(style: .normal, title: "Remove Favourite") { [weak self] _, _, success in
+                self?.removeFavourite(identifier: identifier)
+                success(true)
+            }
+            
+            if #available(iOS 13.0, *) {
+                action.image = UIImage(systemName: "star.slash")
+            }
+            
+            action.backgroundColor = .systemRed
+            
+            return action
+        } else {
+            let action = UIContextualAction(style: .normal, title: "Favourite") { [weak self] _, _, success in
+                self?.setFavourite(identifier: identifier)
+                success(true)
+            }
+            
+            if #available(iOS 13.0, *) {
+                action.image = UIImage(systemName: "star")
+            }
+            
+            action.backgroundColor = .systemBlue
+            
+            return action
+        }
+    }
+    
+    @available(iOS 13.0, *)
+    private func createContextualMenu(identifier: String) -> UIAction {
+        if Self.isFavourite(identifier: identifier) {
+            return UIAction(
+                title: "Unfavourite",
+                image: UIImage(systemName: "star.slash"),
+                identifier: nil,
+                attributes: .destructive
+            ) { [weak self] _ in
+                self?.removeFavourite(identifier: identifier)
+            }
+        } else {
+            return UIAction(
+                title: "Favourite",
+                image: UIImage(systemName: "star"),
+                identifier: nil
+            ) { [weak self] _ in
+                self?.setFavourite(identifier: identifier)
+            }
+        }
+    }
 }
 
 extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegate {
@@ -249,6 +320,32 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
 
             openDetail(viewController: viewController)
         }
+    }
+    
+    internal func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let cellData = data[indexPath.section].cells[indexPath.row]
+        let action = createFavouriteSwipeButton(identifier: cellData.identifer)
+        return UISwipeActionsConfiguration(actions: [action])
+    }
+    
+    internal func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let cellData = data[indexPath.section].cells[indexPath.row]
+        let action = createFavouriteSwipeButton(identifier: cellData.identifer)
+        return UISwipeActionsConfiguration(actions: [action])
+    }
+    
+    @available(iOS 13.0, *)
+    func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        let cellData = data[indexPath.section].cells[indexPath.row]
+        
+        return UIContextMenuConfiguration(
+            identifier: nil,
+            previewProvider: nil,
+            actionProvider: { _ in
+                return UIMenu(title: "", children: [self.createContextualMenu(identifier: cellData.identifer)])
+            }
+        )
     }
 }
 

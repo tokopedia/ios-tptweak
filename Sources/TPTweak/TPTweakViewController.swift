@@ -97,6 +97,13 @@ public final class TPTweakViewController: UIViewController {
 
     private lazy var doneBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(dismissSelf))
     private lazy var resetBarButtonItem = UIBarButtonItem(title: "Reset", style: .plain, target: self, action: #selector(resetAll))
+    private lazy var favouriteBarButtonItem: UIBarButtonItem = {
+        if #available(iOS 13.0, *) {
+            return UIBarButtonItem(image: UIImage(systemName: "star.fill"), style: .plain, target: self, action: #selector(openFavourite))
+        } else {
+            return UIBarButtonItem(title: "Favourite", style: .plain , target: self, action: #selector(openFavourite))
+        }
+    }()
 
     // MARK: - Life Cycle
 
@@ -118,7 +125,7 @@ public final class TPTweakViewController: UIViewController {
         table.reloadData()
 
         navigationItem.leftBarButtonItem = doneBarButtonItem
-        navigationItem.rightBarButtonItem = resetBarButtonItem
+        navigationItem.rightBarButtonItems = [resetBarButtonItem, favouriteBarButtonItem]
         
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
@@ -220,7 +227,7 @@ public final class TPTweakViewController: UIViewController {
             return alert
         }
 
-        let confirmationDialog = UIAlertController(title: "Are you Sure", message: nil, preferredStyle: .alert)
+        let confirmationDialog = UIAlertController(title: "Are you Sure", message: "This action will clear all custom tweaks value, and revert it all back to default value.", preferredStyle: .alert)
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
         let confirmAction = UIAlertAction(title: "Confirm", style: .destructive) { _ in
             let loading = showLoading()
@@ -234,6 +241,19 @@ public final class TPTweakViewController: UIViewController {
         confirmationDialog.addAction(cancelAction)
 
         present(confirmationDialog, animated: true)
+    }
+    
+    @objc
+    private func openFavourite() {
+        var favouriteEntries = [TPTweakEntry]()
+        for row in data {
+            favouriteEntries += row.entries.filter { TPTweakPickerViewController.isFavourite(identifier: $0.getIdentifier()) }
+        }
+        
+        let data = convertRowToSection(row: Row(name: "", entries: favouriteEntries))
+        let favouriteViewController = TPTweakPickerViewController(data: data)
+        favouriteViewController.title = "Favourites"
+        self.navigationController?.pushViewController(favouriteViewController, animated: true)
     }
     
     @objc
@@ -267,6 +287,10 @@ extension TPTweakViewController: UITableViewDataSource, UITableViewDelegate {
         let viewController = TPTweakPickerViewController(data: data)
         viewController.title = cell.name
         navigationController?.pushViewController(viewController, animated: true)
+    }
+    
+    public func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return "Tweaks"
     }
 }
 
