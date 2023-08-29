@@ -33,12 +33,16 @@ internal final class TPTweakPickerViewController: UIViewController {
             var filteredData = [Section]()
             
             for section in _data {
-                let newCell = section.cells.filter { $0.name.lowercased().contains(searchKeyword) }
+                let newCells = section.cells.filter { $0.name.lowercased().contains(searchKeyword) }
                 
                 // skip if this section's cell does not have any matching cell
-                if newCell.isEmpty { continue }
+                if newCells.isEmpty { continue }
                 
-                let newSection = Section(name: section.name, footer: section.footer, cells: newCell)
+                let newSection = Section(
+                    name: section.name,
+                    footer: newCells.last(where: { $0.footer != nil })?.footer, // use footer from last cell in newCells that contan any footer.
+                    cells: newCells
+                )
                 filteredData.append(newSection)
             }
             
@@ -267,6 +271,7 @@ extension TPTweakPickerViewController {
         internal let name: String
         internal let identifer: String
         internal let type: TPTweakEntryType
+        internal let footer: String?
     }
 }
 #endif

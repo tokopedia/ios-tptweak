@@ -73,7 +73,7 @@ public final class TPTweakViewController: UIViewController {
         return view
     }()
     
-    private lazy var searchResultViewController = TPTweakPickerViewController(data: [.init(name: "Foo", footer: "hello World", cells: [.init(name: "Bar", identifer: "bar", type: .action({}))])])
+    private lazy var searchResultViewController = TPTweakPickerViewController(data: [])
     
     private lazy var searchController: UISearchController = {
         let searchController = UISearchController(searchResultsController: searchResultViewController)
@@ -183,7 +183,12 @@ public final class TPTweakViewController: UIViewController {
                 var cells = [TPTweakPickerViewController.Cell]()
 
                 for entry in value {
-                    cells.append(TPTweakPickerViewController.Cell(name: entry.cell, identifer: entry.getIdentifier(), type: entry.type))
+                    cells.append(TPTweakPickerViewController.Cell(
+                        name: entry.cell,
+                        identifer: entry.getIdentifier(),
+                        type: entry.type,
+                        footer: entry.footer
+                    ))
 
                     if let footer = entry.footer {
                         footers.append(footer)
