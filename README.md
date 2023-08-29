@@ -3,9 +3,9 @@
 TPTweak is a debugging tool to help adjust your iOS app on the fly without recompile.
 inspired by facebook's [Tweak](https://github.com/facebookarchive/Tweaks), TPTweak is fully written in swift, and with simpler API.
 
-|Example of TPTweak|Selecting options of string|Selecting options of number|
-|----|----|----|
-|![](assets/tptweak_home.png)|![](assets/tptweak_string_selection_example.png)|![](assets/tptweak_number_selection_example.png)|
+|Example of TPTweak|Selecting options of string|Selecting options of number|Search|
+|----|----|----|----|
+|![](assets/tptweak_home.png)|![](assets/tptweak_string_selection_example.png)|![](assets/tptweak_number_selection_example.png)|![Simulator Screenshot - iPhone 14 Pro - 2023-08-29 at 16 57 39](https://github.com/tokopedia/ios-tptweak/assets/16457495/02dbd7d6-0fa3-4a44-85b0-dfc52501b3b6)|
 
 # Installation
 ## Swift Package Manager
