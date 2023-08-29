@@ -108,3 +108,9 @@ public struct TPTweakEntry {
         TPTweakStore.add(self)
     }
 }
+
+extension TPTweakEntry {
+    internal static var favourite: TPTweakEntry {
+        TPTweakEntry(category: "tptweak", section: "internal", cell: "favourite", footer: nil, type: .action({}))
+    }
+}

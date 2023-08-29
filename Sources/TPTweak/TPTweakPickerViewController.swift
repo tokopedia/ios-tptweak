@@ -138,6 +138,55 @@ internal final class TPTweakPickerViewController: UIViewController {
             navigationController?.popToViewController(self, animated: true)
         }
     }
+    
+    private func isFavourite(identifier: String) -> Bool {
+        let favourites = TPTweakEntry.favourite.getValue(Set<String>.self) ?? []
+        return favourites.contains(where: { $0 == identifier })
+    }
+    
+    private func setFavourite(identifier: String) {
+        var favourites = TPTweakEntry.favourite.getValue(Set<String>.self) ?? []
+        favourites.insert(identifier)
+        
+        TPTweakEntry.favourite.setValue(favourites)
+    }
+    
+    private func removeFavourite(identifier: String) {
+        var favourites = TPTweakEntry.favourite.getValue(Set<String>.self) ?? []
+        favourites.remove(identifier)
+        
+        TPTweakEntry.favourite.setValue(favourites)
+    }
+    
+    private func createFavouriteSwipeButton(identifier: String) -> UIContextualAction {
+        if isFavourite(identifier: identifier) {
+            let action = UIContextualAction(style: .normal, title: "Remove Favourite") { [weak self] _, _, success in
+                self?.removeFavourite(identifier: identifier)
+                success(true)
+            }
+            
+            if #available(iOS 13.0, *) {
+                action.image = UIImage(systemName: "star.slash")
+            }
+            
+            action.backgroundColor = .systemRed
+            
+            return action
+        } else {
+            let action = UIContextualAction(style: .normal, title: "Favourite") { [weak self] _, _, success in
+                self?.setFavourite(identifier: identifier)
+                success(true)
+            }
+            
+            if #available(iOS 13.0, *) {
+                action.image = UIImage(systemName: "star")
+            }
+            
+            action.backgroundColor = .systemBlue
+            
+            return action
+        }
+    }
 }
 
 extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegate {
@@ -249,6 +298,19 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
 
             openDetail(viewController: viewController)
         }
+    }
+    
+    internal func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let cellData = data[indexPath.section].cells[indexPath.row]
+        let action = createFavouriteSwipeButton(identifier: cellData.identifer)
+        return UISwipeActionsConfiguration(actions: [action])
+    }
+    
+    internal func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let cellData = data[indexPath.section].cells[indexPath.row]
+        let action = createFavouriteSwipeButton(identifier: cellData.identifer)
+        return UISwipeActionsConfiguration(actions: [action])
     }
 }
 
