@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(UIKit)
 @testable
 import TPTweak
 import XCTest
@@ -113,3 +114,4 @@ internal final class TPTweakTests: XCTestCase {
         XCTAssertEqual(dummyEntry.getValue(Bool.self), nil)
     }
 }
+#endif

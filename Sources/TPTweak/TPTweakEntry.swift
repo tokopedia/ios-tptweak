@@ -12,23 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
 #if canImport(UIKit)
+import Foundation
 import UIKit
-#endif
 
 /**
  Entry type, pick your poison
  */
 public enum TPTweakEntryType {
     case `switch`(defaultValue: Bool, completion: ((Bool) -> Void)? = nil)
-    
-    #if canImport(UIKit)
     case action(accessoryType: UITableViewCell.AccessoryType = .disclosureIndicator, () -> Void)
-    #else
-    case action(() -> Void)
-    #endif
-    
     case strings(item: [String], selected: String, completion: ((String) -> Void)? = nil)
     case numbers(item: [Double], selected: Double, completion: ((Double) -> Void)? = nil)
 }
@@ -52,7 +45,6 @@ public struct TPTweakEntry {
     /// type of Entry
     public let type: TPTweakEntryType
     
-    #if canImport(UIKit)
     public init(
         category: String,
         section: String,
@@ -68,24 +60,7 @@ public struct TPTweakEntry {
         self.footer = footer
         self.type = type
     }
-    #else
-    public init(
-        category: String,
-        section: String,
-        cell: String,
-        footer: String? = nil,
-        type: TPTweakEntryType
-    ) {
-        self.category = category
-        self.section = section
-        self.cell = cell
-        self.cellLeftIcon = nil
-        self.footer = footer
-        self.type = type
-    }
-    #endif
     
-
     /**
      Read current value of this entry on TPTweak
 
@@ -168,3 +143,4 @@ extension TPTweakEntry {
         )
     }
 }
+#endif
