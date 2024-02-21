@@ -1,4 +1,4 @@
-// Copyright 2022 Tokopedia. All rights reserved.
+// Copyright 2022-2024 Tokopedia. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(UIKit)
 import Foundation
+import UIKit
 
 /**
  Entry type, pick your poison
  */
 public enum TPTweakEntryType {
-    case `switch`(defaultValue: Bool, closure: ((Bool) -> Void)? = nil)
-    case action(() -> Void)
-    case strings(item: [String], selected: String)
-    case numbers(item: [Double], selected: Double)
+    case `switch`(defaultValue: Bool, completion: ((Bool) -> Void)? = nil)
+    case action(accessoryType: UITableViewCell.AccessoryType = .disclosureIndicator, () -> Void)
+    case strings(item: [String], selected: String, completion: ((String) -> Void)? = nil)
+    case numbers(item: [Double], selected: Double, completion: ((Double) -> Void)? = nil)
 }
 
 /**
@@ -34,26 +36,31 @@ public struct TPTweakEntry {
     public let section: String
     /// Cell will be the name of cell on second page table of TPTweak
     public let cell: String
+    /// icon on the left of the cell
+    public let cellLeftIcon: UIImage?
 
     /// Will only visible on second page / TPTweakPickerViewController
     public let footer: String?
+    
     /// type of Entry
     public let type: TPTweakEntryType
-
+    
     public init(
         category: String,
         section: String,
         cell: String,
-        footer: String?,
+        cellLeftIcon: UIImage? = nil,
+        footer: String? = nil,
         type: TPTweakEntryType
     ) {
         self.category = category
         self.section = section
         self.cell = cell
+        self.cellLeftIcon = cellLeftIcon
         self.footer = footer
         self.type = type
     }
-
+    
     /**
      Read current value of this entry on TPTweak
 
@@ -113,4 +120,27 @@ extension TPTweakEntry {
     internal static var favourite: TPTweakEntry {
         TPTweakEntry(category: "tptweak", section: "internal", cell: "favourite", footer: nil, type: .action({}))
     }
+    
+    internal static var peepOpacity: TPTweakEntry {
+        TPTweakEntry(
+            category: "Settings",
+            section: "Interaction",
+            cell: "Hold Opacity",
+            footer: "The opacity when you hold the navigation bar",
+            type: .numbers(item: [0, 0.25, 0.5, 0.75, 1], selected: 0.25)
+        )
+    }
+    
+    internal static var clearCache: TPTweakEntry {
+        TPTweakEntry(
+            category: "Settings",
+            section: "Miscellaneous",
+            cell: "Reset",
+            footer: "This will reset all Tweaks to default value",
+            type: .action(accessoryType: .none, {
+                TPTweak.resetAll()
+            })
+        )
+    }
 }
+#endif

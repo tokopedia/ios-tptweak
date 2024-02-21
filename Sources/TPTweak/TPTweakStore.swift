@@ -1,4 +1,4 @@
-// Copyright 2022 Tokopedia. All rights reserved.
+// Copyright 2022-2024 Tokopedia. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(UIKit)
 import Foundation
 
 internal typealias TPTweak = TPTweakStore
@@ -122,9 +123,9 @@ public enum TPTweakStore {
             switch entry.type {
             case let .switch(defaultValue, _):
                 set(defaultValue, identifier: identifier)
-            case let .numbers(_, defaultValue):
+            case let .numbers(_, defaultValue, _):
                 set(defaultValue, identifier: identifier)
-            case let .strings(_, defaultValue):
+            case let .strings(_, defaultValue, _):
                 set(defaultValue, identifier: identifier)
             case .action:
                 break
@@ -271,3 +272,4 @@ internal struct TPTweakStoreEnvironment {
         )
     }
 }
+#endif

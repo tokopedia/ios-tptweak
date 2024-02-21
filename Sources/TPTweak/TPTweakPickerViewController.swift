@@ -1,4 +1,4 @@
-// Copyright 2022 Tokopedia. All rights reserved.
+// Copyright 2022-2024 Tokopedia. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,6 +69,7 @@ internal final class TPTweakPickerViewController: UIViewController {
         view.translatesAutoresizingMaskIntoConstraints = false
         view.delegate = self
         view.dataSource = self
+        view.keyboardDismissMode = .onDrag
         view.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
 
         return view
@@ -149,6 +150,7 @@ internal final class TPTweakPickerViewController: UIViewController {
         favourites.insert(identifier)
         
         TPTweakEntry.favourite.setValue(favourites)
+        table.reloadData()
     }
     
     private func removeFavourite(identifier: String) {
@@ -156,6 +158,26 @@ internal final class TPTweakPickerViewController: UIViewController {
         favourites.remove(identifier)
         
         TPTweakEntry.favourite.setValue(favourites)
+        
+        // update data
+        for (offset, section) in zip(_data.indices, _data) {
+            for (rowOffset, row) in zip(section.cells.indices, section.cells) where row.identifer == identifier {
+                // create new cell without the removed favourite
+                var newCells = section.cells
+                newCells.removeAll(where: { $0.identifer == identifier })
+                
+                if newCells.isEmpty {
+                    // if section does not have any cells, remove section
+                    _data.removeAll(where: { $0.name == section.name })
+                } else {
+                    // update section with new cells
+                    guard let index = _data.firstIndex(where: { $0.name == section.name && $0.footer == section.footer }) else { continue }
+                    _data[index].cells = newCells
+                }
+            }
+        }
+        
+        table.reloadData()
     }
     
     private func createFavouriteSwipeButton(identifier: String) -> UIContextualAction {
@@ -166,7 +188,7 @@ internal final class TPTweakPickerViewController: UIViewController {
             }
             
             if #available(iOS 13.0, *) {
-                action.image = UIImage(systemName: "star.slash")
+                action.image = UIImage(systemName: "heart.slash")
             }
             
             action.backgroundColor = .systemRed
@@ -179,7 +201,7 @@ internal final class TPTweakPickerViewController: UIViewController {
             }
             
             if #available(iOS 13.0, *) {
-                action.image = UIImage(systemName: "star")
+                action.image = UIImage(systemName: "heart")
             }
             
             action.backgroundColor = .systemBlue
@@ -193,7 +215,7 @@ internal final class TPTweakPickerViewController: UIViewController {
         if Self.isFavourite(identifier: identifier) {
             return UIAction(
                 title: "Unfavourite",
-                image: UIImage(systemName: "star.slash"),
+                image: UIImage(systemName: "heart.slash"),
                 identifier: nil,
                 attributes: .destructive
             ) { [weak self] _ in
@@ -202,7 +224,7 @@ internal final class TPTweakPickerViewController: UIViewController {
         } else {
             return UIAction(
                 title: "Favourite",
-                image: UIImage(systemName: "star"),
+                image: UIImage(systemName: "heart"),
                 identifier: nil
             ) { [weak self] _ in
                 self?.setFavourite(identifier: identifier)
@@ -213,7 +235,22 @@ internal final class TPTweakPickerViewController: UIViewController {
 
 extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegate {
     internal func numberOfSections(in _: UITableView) -> Int {
-        data.count
+        let count = data.count
+        
+        // handling empty state
+        if count == 0 {
+            let emptyLabel = UILabel(frame: .zero)
+            emptyLabel.text = "You can Favorite a Tweaks by swipe or long press on the cell"
+            emptyLabel.textAlignment = .center
+            emptyLabel.numberOfLines = 0
+            emptyLabel.font = .boldSystemFont(ofSize: 16)
+            
+            self.table.backgroundView = emptyLabel
+        } else {
+            self.table.backgroundView = nil
+        }
+        
+        return count
     }
 
     internal func tableView(_: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -226,12 +263,14 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
         }
 
         let cellData = data[indexPath.section].cells[indexPath.row]
-
+        cell.imageView?.image = cellData.leftIcon
+        
         switch cellData.type {
         case .action:
             cell.textLabel?.text = cellData.name
             cell.detailTextLabel?.text = nil
-            cell.accessoryType = .disclosureIndicator
+            // custom accessoryType only available for action type
+            cell.accessoryType = cellData.accessoryType
         case .switch:
             let switcher = UISwitch()
             switcher.isOn = TPTweakStore.read(type: Bool.self, identifier: cellData.identifer) ?? false
@@ -240,14 +279,14 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
             cell.textLabel?.text = cellData.name
             cell.detailTextLabel?.text = nil
             cell.accessoryView = switcher
-        case let .strings(_, defaultValue):
+        case let .strings(_, defaultValue, _):
             let currentValue = TPTweakStore.read(type: String.self, identifier: cellData.identifer) ?? defaultValue
 
             cell = UITableViewCell(style: .value1, reuseIdentifier: "cell")
             cell.detailTextLabel?.text = currentValue
             cell.textLabel?.text = cellData.name
             cell.accessoryType = .disclosureIndicator
-        case let .numbers(_, defaultValue):
+        case let .numbers(_, defaultValue, _):
             let currentValue = TPTweakStore.read(type: Double.self, identifier: cellData.identifer) ?? defaultValue
 
             cell = UITableViewCell(style: .value1, reuseIdentifier: "cell")
@@ -276,16 +315,16 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
 
         let cellData = data[indexPath.section].cells[indexPath.row]
         switch cellData.type {
-        case let .action(closure):
-            closure()
-        case let .switch(_, closure):
+        case let .action(_, completion):
+            completion()
+        case let .switch(_, completion):
             var value = TPTweakStore.read(type: Bool.self, identifier: cellData.identifer) ?? false
             value.toggle()
 
             TPTweakStore.set(value, identifier: cellData.identifer)
             tableView.reloadRows(at: [indexPath], with: .none) // to update cell value after action
-            closure?(value)
-        case let .numbers(item, defaultValue):
+            completion?(value)
+        case let .numbers(item, defaultValue, completion):
             let viewController = TPTweakOptionsViewController(
                 title: cellData.name,
                 data: item.map { TPTweakOptionsViewController<Double>.Cell(name: String($0), value: $0) },
@@ -295,6 +334,7 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
             viewController.didChoose = { [weak tableView, weak self] newValue in
                 TPTweakStore.set(newValue, identifier: cellData.identifer)
                 tableView?.reloadRows(at: [indexPath], with: .automatic) // to update cell value after action
+                completion?(newValue)
 
                 if let self = self {
                     self.closeDetail(viewController: viewController) // back to picker
@@ -302,7 +342,7 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
             }
 
             openDetail(viewController: viewController)
-        case let .strings(item, defaultValue):
+        case let .strings(item, defaultValue, completion):
             let viewController = TPTweakOptionsViewController(
                 title: cellData.name,
                 data: item.map { TPTweakOptionsViewController<String>.Cell(name: $0, value: $0) },
@@ -312,7 +352,8 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
             viewController.didChoose = { [weak tableView, weak self] newValue in
                 TPTweakStore.set(newValue, identifier: cellData.identifer)
                 tableView?.reloadRows(at: [indexPath], with: .automatic) // to update cell value after action
-
+                completion?(newValue)
+                
                 if let self = self {
                     self.closeDetail(viewController: viewController) // back to picker
                 }
@@ -323,7 +364,6 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
     }
     
     internal func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        
         let cellData = data[indexPath.section].cells[indexPath.row]
         let action = createFavouriteSwipeButton(identifier: cellData.identifer)
         return UISwipeActionsConfiguration(actions: [action])
@@ -361,14 +401,16 @@ extension TPTweakPickerViewController {
     internal struct Section {
         internal let name: String
         internal let footer: String?
-        internal let cells: [Cell]
+        internal var cells: [Cell]
     }
 
     internal struct Cell {
         internal let name: String
         internal let identifer: String
         internal let type: TPTweakEntryType
+        internal let leftIcon: UIImage?
         internal let footer: String?
+        internal let accessoryType: UITableViewCell.AccessoryType
     }
 }
 #endif
