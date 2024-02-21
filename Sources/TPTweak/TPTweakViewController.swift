@@ -219,8 +219,8 @@ public final class TPTweakViewController: UIViewController {
         navigationItem.hidesSearchBarWhenScrolling = false
     }
     
-    public override func viewIsAppearing(_ animated: Bool) {
-        super.viewIsAppearing(animated)
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         
         setupDefaultNavigationBarItems()
         
@@ -613,17 +613,30 @@ extension TPTweakViewController {
     private static func setupBubble() {
         guard let visibleViewController = getVisibleViewController() else { return }
         
-        let image = UIImageView(frame: .init(x: 0, y: 0, width: 50, height: 50))
-        image.contentMode = .center
-        image.image = UIImage(systemName: "arrow.up.left.and.arrow.down.right", withConfiguration: UIImage.SymbolConfiguration(pointSize: 18))
-        image.tintColor = .white
+        let subview: UIView
+        if #available(iOS 13.0, *) {
+            let image = UIImageView(frame: .init(x: 0, y: 0, width: 50, height: 50))
+            image.contentMode = .center
+            image.image = UIImage(systemName: "arrow.up.left.and.arrow.down.right", withConfiguration: UIImage.SymbolConfiguration(pointSize: 18))
+            image.tintColor = .white
+            subview = image
+        } else {
+            let label = UILabel(frame: .init(x: 0, y: 0, width: 50, height: 50))
+            label.text = "T"
+            label.textAlignment = .center
+            subview = label
+        }
 
         let lastPosition = getBubblePosition()
         let bubble = UIView(frame: .init(x: lastPosition.x, y: lastPosition.y, width: 50, height: 50))
-        bubble.backgroundColor = .secondarySystemBackground
+        if #available(iOS 13.0, *) {
+            bubble.backgroundColor = .secondarySystemBackground
+        } else {
+            bubble.backgroundColor = .gray
+        }
         bubble.alpha = 0.9
         bubble.layer.cornerRadius = 25
-        bubble.addSubview(image)
+        bubble.addSubview(subview)
         
         __bubbleView = bubble
 
