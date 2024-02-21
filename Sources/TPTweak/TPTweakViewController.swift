@@ -394,6 +394,9 @@ public final class TPTweakViewController: UIViewController {
     
     @objc
     private func holdToPeep(_ sender: UILongPressGestureRecognizer) {
+        // only avalable if not minimizable
+        guard minimizable == false else { return }
+        
         if (sender.state == .began) {
             let opacity = TPTweakEntry.peepOpacity.getValue(Double.self) ?? 0.25
             
