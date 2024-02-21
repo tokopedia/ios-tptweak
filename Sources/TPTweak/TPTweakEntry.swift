@@ -13,15 +13,24 @@
 // limitations under the License.
 
 import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /**
  Entry type, pick your poison
  */
 public enum TPTweakEntryType {
-    case `switch`(defaultValue: Bool, closure: ((Bool) -> Void)? = nil)
+    case `switch`(defaultValue: Bool, completion: ((Bool) -> Void)? = nil)
+    
+    #if canImport(UIKit)
+    case action(accessoryType: UITableViewCell.AccessoryType = .disclosureIndicator, () -> Void)
+    #else
     case action(() -> Void)
-    case strings(item: [String], selected: String)
-    case numbers(item: [Double], selected: Double)
+    #endif
+    
+    case strings(item: [String], selected: String, completion: ((String) -> Void)? = nil)
+    case numbers(item: [Double], selected: Double, completion: ((Double) -> Void)? = nil)
 }
 
 /**
@@ -34,25 +43,48 @@ public struct TPTweakEntry {
     public let section: String
     /// Cell will be the name of cell on second page table of TPTweak
     public let cell: String
+    /// icon on the left of the cell
+    public let cellLeftIcon: UIImage?
 
     /// Will only visible on second page / TPTweakPickerViewController
     public let footer: String?
+    
     /// type of Entry
     public let type: TPTweakEntryType
-
+    
+    #if canImport(UIKit)
     public init(
         category: String,
         section: String,
         cell: String,
-        footer: String?,
+        cellLeftIcon: UIImage? = nil,
+        footer: String? = nil,
         type: TPTweakEntryType
     ) {
         self.category = category
         self.section = section
         self.cell = cell
+        self.cellLeftIcon = cellLeftIcon
         self.footer = footer
         self.type = type
     }
+    #else
+    public init(
+        category: String,
+        section: String,
+        cell: String,
+        footer: String? = nil,
+        type: TPTweakEntryType
+    ) {
+        self.category = category
+        self.section = section
+        self.cell = cell
+        self.cellLeftIcon = nil
+        self.footer = footer
+        self.type = type
+    }
+    #endif
+    
 
     /**
      Read current value of this entry on TPTweak
@@ -112,5 +144,27 @@ public struct TPTweakEntry {
 extension TPTweakEntry {
     internal static var favourite: TPTweakEntry {
         TPTweakEntry(category: "tptweak", section: "internal", cell: "favourite", footer: nil, type: .action({}))
+    }
+    
+    internal static var peepOpacity: TPTweakEntry {
+        TPTweakEntry(
+            category: "Settings",
+            section: "Interaction",
+            cell: "Hold Opacity",
+            footer: "The opacity when you hold the navigation bar",
+            type: .numbers(item: [0, 0.25, 0.5, 0.75, 1], selected: 0.25)
+        )
+    }
+    
+    internal static var clearCache: TPTweakEntry {
+        TPTweakEntry(
+            category: "Settings",
+            section: "Miscellaneous",
+            cell: "Reset",
+            footer: "This will reset all Tweaks to default value",
+            type: .action(accessoryType: .none, {
+                TPTweak.resetAll()
+            })
+        )
     }
 }

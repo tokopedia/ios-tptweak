@@ -122,9 +122,9 @@ public enum TPTweakStore {
             switch entry.type {
             case let .switch(defaultValue, _):
                 set(defaultValue, identifier: identifier)
-            case let .numbers(_, defaultValue):
+            case let .numbers(_, defaultValue, _):
                 set(defaultValue, identifier: identifier)
-            case let .strings(_, defaultValue):
+            case let .strings(_, defaultValue, _):
                 set(defaultValue, identifier: identifier)
             case .action:
                 break

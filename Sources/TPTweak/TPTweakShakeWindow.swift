@@ -37,6 +37,10 @@ public class TPTweakShakeWindow: UIWindow {
             return false
         #endif
     }
+    
+    private var tweakViewController: UIViewController?
+    private var realViewController: UIViewController?
+    private var bubbleView: UIView?
 
     // MARK: - Life Cylce
 
@@ -107,19 +111,9 @@ public class TPTweakShakeWindow: UIWindow {
     private func applicationDidBecomeActiveWithNotification() {
         active = true
     }
-
+    
     private func presentTweaks() {
-        var visibleViewController = rootViewController
-
-        if visibleViewController?.presentedViewController != nil {
-            visibleViewController = visibleViewController?.presentedViewController
-        }
-
-        // prevent double-presenting the tweaks view controller
-        guard (visibleViewController is TPTweakWithNavigatationViewController) == false else { return }
-
-        let viewController = TPTweakWithNavigatationViewController()
-        visibleViewController?.present(viewController, animated: true, completion: nil)
+        TPTweakViewController.presentMinimizableTweaks()
     }
 }
 #endif
