@@ -1,4 +1,11 @@
 
+# 2.0.0
+- Minimizable TPTweakViewController with `TPTweakViewController.presentMinimizableTweaks`
+- Hold navigation controller to peep the background(only available on non minimizable mode)
+- now every option will have completions
+- add Settings menu for setting up TPTweakViewController
+- add an empty state message on the favourite page
+- fix the favorite page not reflecting the latest value after modifying one of the cells.
 
 # 1.2.0
 - Add Search functionality ([#11](https://github.com/tokopedia/ios-tptweak/pull/11))

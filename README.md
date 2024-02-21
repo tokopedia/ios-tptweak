@@ -21,13 +21,13 @@ https://github.com/tokopedia/ios-tptweak
 
 or manually add to your `Package.swift`
 ```swift
-.package(url: "https://github.com/tokopedia/ios-tptweak", from: "1.0.0"),
+.package(url: "https://github.com/tokopedia/ios-tptweak", from: "2.0.0"),
 ```
 
 # Cocoapods
 add this to your `Podfile`
 ```
-pod 'TPTweak', '~> 1.0.0'
+pod 'TPTweak', '~> 2.0.0'
 ```
 
 # Nomenclature
@@ -178,7 +178,7 @@ TPTweakEntry.enableTracking.setValue(true)
 
 # License
 ```
- Copyright 2022 Tokopedia. All rights reserved.
+ Copyright 2022-2024 Tokopedia. All rights reserved.
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
