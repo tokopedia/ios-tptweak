@@ -52,21 +52,28 @@ public final class TPTweakWithNavigatationViewController: UINavigationController
     
     public override func pushViewController(_ viewController: UIViewController, animated: Bool) {
         super.pushViewController(viewController, animated: animated)
-        
-        /// automatically add minimizable on every children if enable
-        if let tptweakviewController = __tweakViewController,
-            viewController != tptweakviewController.tweakViewController,
-            tptweakviewController.tweakViewController.minimizable
-        {
-            if (viewController.navigationItem.rightBarButtonItems?.count ?? 0) > 0 {
-                viewController.navigationItem.rightBarButtonItems?.append(tptweakviewController.tweakViewController.minimizeBarButtonItem)
-            } else {
-                viewController.navigationItem.rightBarButtonItems = [
-                    tptweakviewController.tweakViewController.minimizeBarButtonItem
-                ]
+            
+        // a hacky way to wait until lifecycle like viewDidLoad, viewWillApper or other to complete
+        // so the vc will not replace the navigation added by TPTweak.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            /// automatically add minimizable on every children if enable
+            if let tptweakviewController = __tweakViewController,
+                viewController != tptweakviewController.tweakViewController,
+                tptweakviewController.tweakViewController.minimizable
+            {
+                if (viewController.navigationItem.rightBarButtonItems?.count ?? 0) > 0 {
+                    viewController.navigationItem.rightBarButtonItems?.append(tptweakviewController.tweakViewController.minimizeBarButtonItem)
+                }
+                else if let existingRightBarButtonItem = viewController.navigationItem.rightBarButtonItem {
+                    viewController.navigationItem.rightBarButtonItem = nil
+                    viewController.navigationItem.rightBarButtonItems = [tptweakviewController.tweakViewController.minimizeBarButtonItem, existingRightBarButtonItem]
+                }
+                else {
+                    viewController.navigationItem.rightBarButtonItems = [
+                        tptweakviewController.tweakViewController.minimizeBarButtonItem
+                    ]
+                }
             }
-            
-            
         }
     }
 }
@@ -420,7 +427,7 @@ public final class TPTweakViewController: UIViewController {
         }
         
         let data = convertRowToSection(row: Row(name: "", entries: favouriteEntries))
-        let favouriteViewController = TPTweakPickerViewController(data: data)
+        let favouriteViewController = TPTweakPickerViewController(data: data, isFavouritePage: true)
         favouriteViewController.title = "Favourites"
         self.navigationController?.pushViewController(favouriteViewController, animated: true)
     }
@@ -433,18 +440,7 @@ public final class TPTweakViewController: UIViewController {
 
 extension TPTweakViewController: UITableViewDataSource, UITableViewDelegate {
     public func tableView(_: UITableView, numberOfRowsInSection section: Int) -> Int {
-        let count = data.count
-        
-        if count <= 0 {
-            let emptyLabel = UILabel(frame: CGRect(x: 0, y: 0, width: self.view.bounds.size.width, height: self.view.bounds.size.height))
-            emptyLabel.text = "No Data"
-            emptyLabel.textAlignment = NSTextAlignment.center
-            self.table.backgroundView = emptyLabel
-        } else {
-            self.table.backgroundView = nil
-        }
-        
-        return count
+        data.count
     }
 
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -566,7 +562,7 @@ extension TPTweakViewController {
     }
     
     @objc
-    private static func restoreTweaks() {
+    public static func restoreTweaks() {
         guard let tweakViewController = __tweakViewController else { return }
         let tweakView = tweakViewController.view!
         
@@ -598,27 +594,13 @@ extension TPTweakViewController {
         return CGPoint(x: x, y: y)
     }
     
-    private static func getVisibleViewController() -> UIViewController? {
-        var visibleViewController = UIApplication.shared.keyWindow?.rootViewController
-
-        if visibleViewController?.presentedViewController != nil {
-            visibleViewController = visibleViewController?.presentedViewController
-        }
-
-        // prevent double-presenting the tweaks view controller
-        guard let visibleViewController = visibleViewController, (visibleViewController is TPTweakWithNavigatationViewController) == false else { return nil }
-        return visibleViewController
-    }
-    
     private static func setupBubble() {
-        guard let visibleViewController = getVisibleViewController() else { return }
-        
         let subview: UIView
         if #available(iOS 13.0, *) {
             let image = UIImageView(frame: .init(x: 0, y: 0, width: 50, height: 50))
             image.contentMode = .center
             image.image = UIImage(systemName: "arrow.up.left.and.arrow.down.right", withConfiguration: UIImage.SymbolConfiguration(pointSize: 18))
-            image.tintColor = .white
+            image.tintColor = .systemGray6
             subview = image
         } else {
             let label = UILabel(frame: .init(x: 0, y: 0, width: 50, height: 50))
@@ -629,11 +611,8 @@ extension TPTweakViewController {
 
         let lastPosition = getBubblePosition()
         let bubble = UIView(frame: .init(x: lastPosition.x, y: lastPosition.y, width: 50, height: 50))
-        if #available(iOS 13.0, *) {
-            bubble.backgroundColor = .secondarySystemBackground
-        } else {
-            bubble.backgroundColor = .gray
-        }
+        bubble.backgroundColor = .systemGray
+        
         bubble.alpha = 0.9
         bubble.layer.cornerRadius = 25
         bubble.addSubview(subview)
@@ -647,7 +626,7 @@ extension TPTweakViewController {
         bubble.addGestureRecognizer(tap)
 
         // show
-        visibleViewController.view.addSubview(bubble)
+        UIApplication.shared.keyWindow?.addSubview(bubble)
     }
     
     @objc

@@ -53,6 +53,7 @@ internal final class TPTweakPickerViewController: UIViewController {
             _data = newValue
         }
     }
+    private let isFavouritePage: Bool
 
     // MARK: - Views
 
@@ -77,7 +78,8 @@ internal final class TPTweakPickerViewController: UIViewController {
 
     // MARK: - Life Cycle
 
-    internal init(data: [Section]) {
+    internal init(data: [Section], isFavouritePage: Bool = false) {
+        self.isFavouritePage = isFavouritePage
         super.init(nibName: nil, bundle: nil)
         
         self.data = data
@@ -238,7 +240,7 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
         let count = data.count
         
         // handling empty state
-        if count == 0 {
+        if count == 0 && isFavouritePage {
             let emptyLabel = UILabel(frame: .zero)
             emptyLabel.text = "You can Favorite a Tweaks by swipe or long press on the cell"
             emptyLabel.textAlignment = .center

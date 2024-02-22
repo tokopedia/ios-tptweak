@@ -1,3 +1,9 @@
+# 2.0.1
+- fix the empty search page shows favourite empty state message
+- restore tweak view controller if minimizable exists
+- add delay before adding minimize bar button item on the child's navigation bar
+- expose restoreTweaks so custom implementation can mutate the state
+- bubble from now will be added to window instead of the top viewcontroller's view
 
 # 2.0.0
 - Minimizable TPTweakViewController with `TPTweakViewController.presentMinimizableTweaks`

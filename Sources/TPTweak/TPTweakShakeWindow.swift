@@ -88,8 +88,14 @@ public class TPTweakShakeWindow: UIWindow {
         shaking = true
 
         guard shouldPresentTweaks == true else { return }
-        presentTweaks()
-
+        
+        // TPTweak is minimzed, restore
+        if UIApplication.shared.keyWindow?.rootViewController == __realViewController && __tweakViewController != nil {
+            TPTweakViewController.restoreTweaks()
+        } else {
+            presentTweaks()
+        }
+    
         super.motionBegan(motion, with: event)
     }
 
