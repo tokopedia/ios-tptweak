@@ -260,7 +260,7 @@ internal struct TPTweakStoreEnvironment {
     internal static var live: Self {
         TPTweakStoreEnvironment(
             isDebugMode: {
-                #if DEBUG
+                #if USE_DEVTOOLS
                     return true
                 #else
                     return false
