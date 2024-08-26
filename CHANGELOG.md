@@ -1,3 +1,6 @@
+# 2.0.2
+- Add `DevTools` subspec to give developer more control whether to enable TPTweak or not
+
 # 2.0.1
 - fix the empty search page shows favourite empty state message
 - restore tweak view controller if minimizable exists
