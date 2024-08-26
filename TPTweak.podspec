@@ -17,7 +17,7 @@ Pod::Spec.new do |spec|
   end
 
   spec.subspec 'DevTools' do |sp|
-    sp.dependency 'TPTweak/Core'
+    sp.dependency = 'TPTweak/Core'
     sp.compiler_flags = '-DUSE_DEVTOOLS'
   end
 end
