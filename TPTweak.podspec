@@ -17,7 +17,7 @@ Pod::Spec.new do |spec|
     sp.exclude_files  = "Sources/TPTweak/TPTweakStore+DevTools.swift"
   end
 
-  spec.subspec 'DevToolsEnabled' do |sp|
+  spec.subspec 'DevTools' do |sp|
     sp.compiler_flags = '-DUSE_DEVTOOLS'
     sp.source_files   = "Sources/TPTweak/**/*.swift"
     sp.exclude_files  = "Sources/TPTweak/TPTweakStore+Live.swift"
