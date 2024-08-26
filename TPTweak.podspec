@@ -11,5 +11,11 @@ Pod::Spec.new do |spec|
   spec.swift_versions = ["5.4"]
   spec.source         = { :git => "https://github.com/tokopedia/ios-tptweak.git", :tag => "#{spec.version}" }
   spec.source_files   = "Sources/TPTweak/**/*.swift"
+  spec.exclude_files  = "Sources/TPTweak/TPTweakStore+DevTools.swift"
 
+  spec.subspec 'DevToolsEnabled' do |sp|
+    sp.compiler_flags = '-DUSE_DEVTOOLS'
+    sp.source_files   = "Sources/TPTweak/TPTweakStore+DevTools.swift"
+    sp.exclude_files  = "Sources/TPTweak/TPTweakStore+Live.swift"
+  end
 end
