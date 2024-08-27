@@ -1,12 +1,8 @@
 name: Podspec
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - '*'
+  release:
+    types: [created, published]
 
 jobs:
   linting:      
