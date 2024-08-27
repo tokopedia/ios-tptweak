@@ -7,12 +7,18 @@ Pod::Spec.new do |spec|
   spec.author         = { "Wendy Liga" => "wendy.liga@tokopedia.com" }
   spec.homepage       = "https://github.com/tokopedia/ios-tptweak"
 
-  spec.platform       = :ios, "11.0"
-  spec.swift_versions = ["5.4"]
-  spec.source         = { :git => "https://github.com/tokopedia/ios-tptweak.git", :tag => "#{spec.version}" }
-  spec.source_files   = "Sources/TPTweak/**/*.swift"
+  spec.platform         = :ios, "11.0"
+  spec.swift_versions   = ["5.4"]
+  spec.source           = { :git => "https://github.com/tokopedia/ios-tptweak.git", :tag => "#{spec.version}" }
+  spec.source_files     = "Sources/TPTweak/**/*.swift"
+  spec.default_subspec = "Core"
 
-  spec.subspec 'DevTools' do |sp|
-    sp.compiler_flags = '-DUSE_DEVTOOLS'
+  spec.subspec 'Core' do |ss|
+    ss.source_files = "Sources/TPTweak/"
+  end
+
+  spec.subspec 'DevTools' do |ss|
+    ss.compiler_flags = "-DUSE_DEVTOOLS"
+    ss.source_files = "Sources/TPTweak/"
   end
 end
