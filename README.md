@@ -176,6 +176,26 @@ if you want to set the value manually programmatically
 TPTweakEntry.enableTracking.setValue(true)
 ```
 
+## Use custom UserDefaults provider
+you can change the UserDefaults with modifying the TPTweakStore environment
+```swift
+TPTweakStore.environment.provider = {
+    UserDefaults(suiteName: "group.com.example")
+}
+```
+
+## Use custom isDebugMode logic
+you can configure when to enable TPTweak value by adjusting TPTweakStore environment
+```swift
+TPTweakStore.environment.isDebugMode = {
+    #if DEBUG || IN_HOUSE 
+        return true
+    #else
+        return false
+    #endif
+}
+```
+
 # License
 ```
  Copyright 2022-2024 Tokopedia. All rights reserved.
