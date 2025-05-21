@@ -180,7 +180,7 @@ TPTweakEntry.enableTracking.setValue(true)
 you can change the UserDefaults with modifying the TPTweakStore environment
 ```swift
 TPTweakStore.environment.provider = {
-    UserDefaults(suiteName: "group.com.example")
+    UserDefaults(suiteName: "group.com.example")!
 }
 ```
 
