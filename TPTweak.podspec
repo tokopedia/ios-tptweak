@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name             = "TPTweak"
-  spec.version          = "2.0.2"
+  spec.version          = "2.1.0"
   spec.summary          = "TPTweak is a debugging tool to help adjust your iOS app on the fly without recompile"
 
   spec.license          = { :type => "Apache 2.0", :file => "LICENSE.md" }
@@ -18,7 +18,7 @@ Pod::Spec.new do |spec|
   end
 
   spec.subspec 'DevTools' do |ss|
-    ss.compiler_flags = "-DUSE_DEVTOOLS"
+    ss.compiler_flags = "-DTPTWEAK_ENABLE_RELEASE_MODE"
     ss.source_files = "Sources/TPTweak/"
   end
 end

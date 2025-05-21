@@ -97,7 +97,7 @@ internal typealias TPTweak = TPTweakStore
  */
 public enum TPTweakStore {
     /// all side effect logic, also for unit testing
-    internal static var environment: TPTweakStoreEnvironment = .live
+    public static var environment: TPTweakStoreEnvironment = .live
     internal static var entries: [String: TPTweakEntry] = [:]
 
     // MARK: - Interface
@@ -253,14 +253,14 @@ extension TPTweakEntry {
     }
 }
 
-internal struct TPTweakStoreEnvironment {
-    internal var isDebugMode: () -> Bool
-    internal var provider: () -> UserDefaults
+public struct TPTweakStoreEnvironment {
+    public var isDebugMode: () -> Bool
+    public var provider: () -> UserDefaults
 
-    internal static var live: Self {
+    public static var live: Self {
         TPTweakStoreEnvironment(
             isDebugMode: {
-                #if USE_DEVTOOLS
+                #if TPTWEAK_ENABLE_RELEASE_MODE
                     return true
                 #elseif DEBUG
                     return true
