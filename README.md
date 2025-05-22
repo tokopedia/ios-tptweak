@@ -187,6 +187,7 @@ TPTweakStore.environment.provider = {
 ## Use custom isDebugMode logic
 you can configure when to enable TPTweak value by adjusting TPTweakStore environment
 ```swift
+
 TPTweakStore.environment.isDebugMode = {
     #if DEBUG || IN_HOUSE 
         return true
