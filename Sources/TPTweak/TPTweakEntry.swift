@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Tokopedia. All rights reserved.
+// Copyright 2022-2025 Tokopedia. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -116,24 +116,15 @@ public struct TPTweakEntry {
     }
 }
 
+// internal entries
 extension TPTweakEntry {
     internal static var favourite: TPTweakEntry {
-        TPTweakEntry(category: "tptweak", section: "internal", cell: "favourite", footer: nil, type: .action({}))
-    }
-    
-    internal static var peepOpacity: TPTweakEntry {
-        TPTweakEntry(
-            category: "Settings",
-            section: "Interaction",
-            cell: "Hold Opacity",
-            footer: "The opacity when you hold the navigation bar",
-            type: .numbers(item: [0, 0.25, 0.5, 0.75, 1], selected: 0.25)
-        )
+        TPTweakEntry(category: "_tptweak", section: "internal", cell: "favourite", footer: nil, type: .action({}))
     }
     
     internal static var clearCache: TPTweakEntry {
         TPTweakEntry(
-            category: "Settings",
+            category: "_tptweak",
             section: "Miscellaneous",
             cell: "Reset",
             footer: "This will reset all Tweaks to default value",
@@ -141,6 +132,127 @@ extension TPTweakEntry {
                 TPTweak.resetAll()
             })
         )
+    }
+    
+    public static var _internal_tptweak_peepOpacity: TPTweakEntry {
+        TPTweakEntry(
+            category: "_tptweak",
+            section: "Interaction",
+            cell: "Hold Opacity",
+            footer: "The opacity when you hold the navigation bar",
+            type: .numbers(item: [0, 0.25, 0.5, 0.75, 1], selected: 0.25)
+        )
+    }
+    
+    public static var _internal_tptweak_layout: TPTweakEntry {
+        TPTweakEntry(
+            category: "_tptweak",
+            section: "Layout",
+            cell: "Layout",
+            type: TPTweakEntryType.strings(
+                item: TPTweakLayout.allCases.map(\.rawValue),
+                selected: TPTweakLayout.group.rawValue,
+                completion: nil
+            )
+        )
+    }
+    
+    public static var _internal_tptweak_isMinimizable: TPTweakEntry {
+        TPTweakEntry(
+            category: "_tptweak",
+            section: "Layout",
+            cell: "Minimizable",
+            type: TPTweakEntryType.switch(defaultValue: false, completion: nil)
+        )
+    }
+}
+
+// MARK: - indentifier helper
+
+extension TPTweakEntry {
+    /// Get identifier
+    internal func getIdentifier() -> String {
+        Self.createIdentifier(category: category, section: section, cell: cell)
+    }
+
+    /// prefix for identifier on UserDefault
+    internal static let prefix = "TPTweak:"
+
+    /// get formatted identifier from given parameter
+    internal static func createIdentifier(category: String, section: String, cell: String) -> String {
+        prefix + category + "-" + section + "-" + cell
+    }
+}
+
+// MARK: - Favourite action
+
+extension TPTweakEntry {
+    /**
+     check if current entry is favourite or not.
+     */
+    public var isFavourite: Bool {
+        let favourites = TPTweakEntry.favourite.getValue(Set<String>.self) ?? []
+        return favourites.contains(where: { $0 == getIdentifier() })
+    }
+    
+    /// flag this entry as favourite.
+    public func setAsFavourite() {
+        var currentFavourites = TPTweakEntry.favourite.getValue(Set<String>.self) ?? []
+        currentFavourites.insert(getIdentifier())
+        
+        TPTweakEntry.favourite.setValue(currentFavourites)
+    }
+    
+    /// remove this entry from favourite list.
+    public func removeFavourite() {
+        var currentFavourites = TPTweakEntry.favourite.getValue(Set<String>.self) ?? []
+        currentFavourites.remove(getIdentifier())
+        
+        TPTweakEntry.favourite.setValue(currentFavourites)
+    }
+    
+    internal static func isFavourite(identifier: String) -> Bool {
+        TPTweakStore.entries[identifier]?.isFavourite ?? false
+    }
+    
+    internal static func setAsFavourite(identifier: String) {
+        TPTweakStore.entries[identifier]?.setAsFavourite()
+    }
+    
+    internal static func removeFavourite(identifier: String) {
+        TPTweakStore.entries[identifier]?.removeFavourite()
+    }
+}
+
+// MARK: - Searchable
+
+extension TPTweakEntry {
+    /// generate metadata to improve search hit.
+    internal func generateSearchMetadata() -> String {
+        var metadata = ""
+        
+        metadata += category + " " + section + " " + cell
+        
+        if let footer = footer {
+            metadata += " " + footer
+        }
+        
+        switch type {
+        case .action:
+            metadata += " action closure"
+        case let .numbers(items, selected,_):
+            metadata += " numbers number int integer array"
+            metadata += " " + items.map { String($0) }.joined(separator: ",")
+            metadata += " " + String(selected)
+        case let .strings(items, selected,_):
+            metadata += " strings string array"
+            metadata += " " + items.joined(separator: ",")
+            metadata += " " + selected
+        case let .switch(defaultValue,_):
+            metadata += " switch bool boolean \(defaultValue)"
+        }
+        
+        return metadata.lowercased()
     }
 }
 #endif

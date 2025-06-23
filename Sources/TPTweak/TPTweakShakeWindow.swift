@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Tokopedia. All rights reserved.
+// Copyright 2022-2025 Tokopedia. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,9 @@ import UIKit
  */
 public class TPTweakShakeWindow: UIWindow {
     // MARK: - Interface
-
+    
     public var shakeEnabled: Bool = true
+    public var title: String? = nil
 
     // MARK: - Values
 
@@ -37,10 +38,6 @@ public class TPTweakShakeWindow: UIWindow {
             return false
         #endif
     }
-    
-    private var tweakViewController: UIViewController?
-    private var realViewController: UIViewController?
-    private var bubbleView: UIView?
 
     // MARK: - Life Cylce
 
@@ -88,14 +85,14 @@ public class TPTweakShakeWindow: UIWindow {
         shaking = true
 
         guard shouldPresentTweaks == true else { return }
-        
-        // TPTweak is minimzed, restore
-        if UIApplication.shared.keyWindow?.rootViewController == __realViewController && __tweakViewController != nil {
-            TPTweakViewController.restoreTweaks()
-        } else {
-            presentTweaks()
-        }
     
+        let viewController = TPTweakWithNavigatationViewController()
+        
+        if let title {
+            viewController.title = title
+        }
+
+        self.topViewController()?.present(viewController, animated: true)
         super.motionBegan(motion, with: event)
     }
 
@@ -116,10 +113,6 @@ public class TPTweakShakeWindow: UIWindow {
     @objc
     private func applicationDidBecomeActiveWithNotification() {
         active = true
-    }
-    
-    private func presentTweaks() {
-        TPTweakViewController.presentMinimizableTweaks()
     }
 }
 #endif

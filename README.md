@@ -12,6 +12,12 @@ inspired by facebook's [Tweak](https://github.com/facebookarchive/Tweaks), TPTwe
 |----|----|----|
 |![Simulator Screenshot - iPhone 14 Pro - 2023-08-29 at 19 07 10](https://github.com/tokopedia/ios-tptweak/assets/16457495/1580305b-1667-4005-ab61-ff03ff419bd8)|![Simulator Screenshot - iPhone 14 Pro - 2023-08-29 at 19 16 06](https://github.com/tokopedia/ios-tptweak/assets/16457495/a8be171b-fcf7-4923-9c2f-bca646f39919)|![Simulator Screenshot - iPhone 14 Pro - 2023-08-29 at 19 07 04](https://github.com/tokopedia/ios-tptweak/assets/16457495/5562f00e-22e7-4ab3-8a6d-237dbcfa596c)|
 
+## ✨ NEW
+On version 3.0, you will have the options to use flatten home design.
+|Flatten Home|Setting Page|
+|----|----|
+|![Flatten Home](assets/tptweak_home_flatten.png)|![Setting Page](assets/tptewak_settings.png)|
+
 # Installation
 ## Swift Package Manager
 With xcode, add this URL
@@ -21,13 +27,21 @@ https://github.com/tokopedia/ios-tptweak
 
 or manually add to your `Package.swift`
 ```swift
-.package(url: "https://github.com/tokopedia/ios-tptweak", from: "2.0.0"),
+.package(url: "https://github.com/tokopedia/ios-tptweak", from: "3.0.0"),
 ```
 
-# Cocoapods
+## Cocoapods
 add this to your `Podfile`
 ```
-pod 'TPTweak', '~> 2.0.0'
+pod 'TPTweak', '~> 3.0.0'
+```
+
+# Development
+TPTweak is written in Swift, so you need to have Xcode 14+ to build it.
+
+run this command to open the project with the example project.
+```bash
+xed TPTweak.xcworkspace
 ```
 
 # Nomenclature
@@ -199,7 +213,7 @@ TPTweakStore.environment.isDebugMode = {
 
 # License
 ```
- Copyright 2022-2024 Tokopedia. All rights reserved.
+ Copyright 2022-2025 Tokopedia. All rights reserved.
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
