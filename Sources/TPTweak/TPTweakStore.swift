@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Tokopedia. All rights reserved.
+// Copyright 2022-2025 Tokopedia. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -97,7 +97,7 @@ internal typealias TPTweak = TPTweakStore
  */
 public enum TPTweakStore {
     /// all side effect logic, also for unit testing
-    public static var environment: TPTweakStoreEnvironment = .live
+    internal static var environment: TPTweakStoreEnvironment = .live
     internal static var entries: [String: TPTweakEntry] = [:]
 
     // MARK: - Interface
@@ -170,7 +170,7 @@ public enum TPTweakStore {
     /**
      Reset everything on `provider`
      */
-    internal static func resetAll(completion: (() -> Void)? = nil) {
+    public static func resetAll(completion: (() -> Void)? = nil) {
         /// will only execute on debug mode
         guard environment.isDebugMode() else { return }
 
@@ -238,26 +238,11 @@ public enum TPTweakStore {
     }
 }
 
-extension TPTweakEntry {
-    /// Get identifier
-    internal func getIdentifier() -> String {
-        Self.createIdentifier(category: category, section: section, cell: cell)
-    }
+internal struct TPTweakStoreEnvironment {
+    internal var isDebugMode: () -> Bool
+    internal var provider: () -> UserDefaults
 
-    /// prefix for identifier on UserDefault
-    internal static let prefix = "TPTweak:"
-
-    /// get formatted identifier from given parameter
-    internal static func createIdentifier(category: String, section: String, cell: String) -> String {
-        prefix + category + "-" + section + "-" + cell
-    }
-}
-
-public struct TPTweakStoreEnvironment {
-    public var isDebugMode: () -> Bool
-    public var provider: () -> UserDefaults
-
-    public static var live: Self {
+    internal static var live: Self {
         TPTweakStoreEnvironment(
             isDebugMode: {
                 #if TPTWEAK_ENABLE_RELEASE_MODE

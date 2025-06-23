@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Tokopedia. All rights reserved.
+// Copyright 2022-2025 Tokopedia. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,31 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if canImport(UIKit)
-import UIKit
-
-internal var __tweakViewController: TPTweakWithNavigatationViewController?
-internal var __realViewController: UIViewController?
-internal var __bubbleView: UIView?
-
 public final class TPTweakWithNavigatationViewController: UINavigationController {
-    internal var tweakViewController: TPTweakViewController = TPTweakViewController()
     
-    public init() {
+    // MARK: - Life Cycle
+    
+    public init(showDefaultDismissButton: Bool = true) {
+        let tweakViewController = TPTweakViewController(showDefaultDismissButton: showDefaultDismissButton)
+        
         if #available(iOS 13.0, *) {
             super.init(rootViewController: tweakViewController)
         } else {
             super.init(nibName: nil, bundle: nil)
             viewControllers = [tweakViewController]
         }
-
+    
         if #available(iOS 12.0, *) {
             navigationBar.prefersLargeTitles = false
-            navigationItem.largeTitleDisplayMode = .never
         }
         
         navigationBar.isTranslucent = false
-        navigationBar.sizeToFit()
 
         if #available(iOS 13.0, *) {
             navigationBar.tintColor = .systemBlue
@@ -45,75 +39,86 @@ public final class TPTweakWithNavigatationViewController: UINavigationController
             navigationBar.backgroundColor = .systemGroupedBackground
         }
     }
+    
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        if let title {
+            viewControllers.first?.title = title
+        }
+    }
 
     public required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    public override func pushViewController(_ viewController: UIViewController, animated: Bool) {
-        super.pushViewController(viewController, animated: animated)
-            
-        // a hacky way to wait until lifecycle like viewDidLoad, viewWillApper or other to complete
-        // so the vc will not replace the navigation added by TPTweak.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            /// automatically add minimizable on every children if enable
-            if let tptweakviewController = __tweakViewController,
-                viewController != tptweakviewController.tweakViewController,
-                tptweakviewController.tweakViewController.minimizable
-            {
-                if (viewController.navigationItem.rightBarButtonItems?.count ?? 0) > 0 {
-                    viewController.navigationItem.rightBarButtonItems?.append(tptweakviewController.tweakViewController.minimizeBarButtonItem)
-                }
-                else if let existingRightBarButtonItem = viewController.navigationItem.rightBarButtonItem {
-                    viewController.navigationItem.rightBarButtonItem = nil
-                    viewController.navigationItem.rightBarButtonItems = [tptweakviewController.tweakViewController.minimizeBarButtonItem, existingRightBarButtonItem]
-                }
-                else {
-                    viewController.navigationItem.rightBarButtonItems = [
-                        tptweakviewController.tweakViewController.minimizeBarButtonItem
-                    ]
-                }
-            }
-        }
-    }
 }
 
-/**
- Page will show all TPTweak Category
- */
+
 public final class TPTweakViewController: UIViewController {
-    // MARK: - Interfaces
-    
-    /// enable this true if you want to use `TPTweakViewController.presentMinimizableTweaks()`
-    public var minimizable: Bool = false
     
     // MARK: - Values
-
-    private var data: [Row] = []
-    private var didSetUpHoldToPeepRecognizer = false
-
+    
+    internal let showDefaultDismissButton: Bool
+    
+    private weak var viewController: UIViewController?
+    private var currentLayout: TPTweakLayout
+    private var isBubbleSet: Bool = false
+    
+    private lazy var holdToPeepTapRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(holdToPeep))
+    
     // MARK: - Views
-
-    private lazy var table: UITableView = {
-        let view = UITableView(frame: .zero, style: {
+    
+    internal lazy var doneBarButtonItem: UIBarButtonItem = {
+        let button = {
             if #available(iOS 13.0, *) {
-                return .insetGrouped
+                return UIBarButtonItem(image: UIImage(systemName: "xmark"), style: .plain, target: self, action: #selector(dismissSelf))
             } else {
-                // Fallback on earlier versions
-                return .plain
+                return UIBarButtonItem(title: "Close", style: .plain , target: self, action: #selector(dismissSelf))
             }
-        }())
+        }()
+        button.tintColor = .gray
+        
+        return button
+    }()
 
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.delegate = self
-        view.dataSource = self
-        view.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-
-        return view
+    private lazy var settingBarButtonItem: UIBarButtonItem = {
+        let button = {
+            if #available(iOS 13.0, *) {
+                return UIBarButtonItem(image: UIImage(systemName: "gearshape.fill"), style: .plain, target: self, action: #selector(openSettings))
+            } else {
+                return UIBarButtonItem(title: "Settings", style: .plain , target: self, action: #selector(openSettings))
+            }
+        }()
+        button.tintColor = .gray
+        
+        return button
+    }()
+    private lazy var favouriteBarButtonItem: UIBarButtonItem = {
+        let button = {
+            if #available(iOS 13.0, *) {
+                return UIBarButtonItem(image: UIImage(systemName: "heart.fill"), style: .plain, target: self, action: #selector(openFavourite))
+            } else {
+                return UIBarButtonItem(title: "Favourite", style: .plain , target: self, action: #selector(openFavourite))
+            }
+        }()
+        button.tintColor = .gray
+        
+        return button
+    }()
+    private lazy var closeSearchBarButtonItem: UIBarButtonItem = {
+        let button = {
+            if #available(iOS 13.0, *) {
+                return UIBarButtonItem(image: UIImage(systemName: "arrow.backward"), style: .plain, target: self, action: #selector(closeSearch))
+            } else {
+                return UIBarButtonItem(title: "Cancel", style: .plain , target: self, action: #selector(closeSearch))
+            }
+        }()
+        button.tintColor = .gray
+        
+        return button
     }()
     
     private lazy var searchResultViewController = TPTweakPickerViewController(data: [])
-    
     private lazy var searchController: UISearchController = {
         let searchController = UISearchController(searchResultsController: searchResultViewController)
         
@@ -133,176 +138,177 @@ public final class TPTweakViewController: UIViewController {
        return searchController
     }()
     
-    internal lazy var doneBarButtonItem: UIBarButtonItem = {
-        let button = {
-            if #available(iOS 13.0, *) {
-                return UIBarButtonItem(image: UIImage(systemName: "xmark"), style: .plain, target: self, action: #selector(dismissSelf))
-            } else {
-                return UIBarButtonItem(title: "Close", style: .plain , target: self, action: #selector(dismissSelf))
-            }
-        }()
-        button.tintColor = .gray
-        
-        return button
-    }()
-    
-    private lazy var closeSearchBarButtonItem: UIBarButtonItem = {
-        let button = {
-            if #available(iOS 13.0, *) {
-                return UIBarButtonItem(image: UIImage(systemName: "arrow.backward"), style: .plain, target: self, action: #selector(closeSearch))
-            } else {
-                return UIBarButtonItem(title: "Cancel", style: .plain , target: self, action: #selector(closeSearch))
-            }
-        }()
-        button.tintColor = .gray
-        
-        return button
-    }()
-    
-    /// expose to reuse on other VC
-    internal lazy var minimizeBarButtonItem: UIBarButtonItem = {
-        let button = {
-            if #available(iOS 13.0, *) {
-                return UIBarButtonItem(image: UIImage(systemName: "arrow.down.right.and.arrow.up.left"), style: .plain, target: self, action: #selector(minimize))
-            } else {
-                return UIBarButtonItem(title: "Minimize", style: .plain , target: self, action: #selector(minimize))
-            }
-        }()
-        button.tintColor = .gray
-        
-        return button
-    }()
-    
-    private lazy var settingBarButtonItem: UIBarButtonItem = {
-        let button = {
-            if #available(iOS 13.0, *) {
-                return UIBarButtonItem(image: UIImage(systemName: "gearshape.fill"), style: .plain, target: self, action: #selector(openSettings))
-            } else {
-                return UIBarButtonItem(title: "Settings", style: .plain , target: self, action: #selector(openSettings))
-            }
-        }()
-        button.tintColor = .gray
-        
-        return button
-    }()
-    
-    private lazy var favouriteBarButtonItem: UIBarButtonItem = {
-        let button = {
-            if #available(iOS 13.0, *) {
-                return UIBarButtonItem(image: UIImage(systemName: "heart.fill"), style: .plain, target: self, action: #selector(openFavourite))
-            } else {
-                return UIBarButtonItem(title: "Favourite", style: .plain , target: self, action: #selector(openFavourite))
-            }
-        }()
-        button.tintColor = .gray
-        
-        return button
-    }()
-    
-    private lazy var holdToPeepTapRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(holdToPeep))
-    
     // MARK: - Life Cycle
-
-    public init() {
+    
+    public init(showDefaultDismissButton: Bool = false) {
+        self.currentLayout = Self.getLayout()
+        self.showDefaultDismissButton = showDefaultDismissButton
+        
         super.init(nibName: nil, bundle: nil)
-
-        title = "TPTweaks"
-        view.backgroundColor = .white
+        
+        if #available(iOS 13.0, *) {
+            view.backgroundColor = .systemGroupedBackground
+        }
+        
+        title = "TPTweak"
     }
-
-    override public func viewDidLoad() {
+    
+    public override func viewDidLoad() {
         super.viewDidLoad()
-
-        setupView()
         
-        data = fetchUserDefinedRows()
-        searchResultViewController.setData(data: [])
+        if #available(iOS 11.0, *) {
+            navigationItem.largeTitleDisplayMode = .never
+        }
         
-        setupDefaultNavigationBarItems()
-        
-        table.reloadData()
-        
-        navigationItem.searchController = searchController
-        navigationItem.hidesSearchBarWhenScrolling = false
+        // listen to minimize the view controller
+        NotificationCenter.default.addObserver(
+            forName: Self.minimizeNotificationCenterKey,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            self.minimize()
+        }
     }
     
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
-        setupDefaultNavigationBarItems()
-        
-        if !didSetUpHoldToPeepRecognizer {
-            navigationController?.navigationBar.isUserInteractionEnabled = true
-            navigationController?.navigationBar.addGestureRecognizer(holdToPeepTapRecognizer)
-            didSetUpHoldToPeepRecognizer = true
-        }
     }
 
-    public required init?(coder _: NSCoder) {
+    
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        setupViewController()
+        
+        // register navigation bar button
+        setupNavigationBarButton()
+        
+        // register gesture
+        navigationController?.navigationBar.isUserInteractionEnabled = true
+        navigationController?.navigationBar.addGestureRecognizer(holdToPeepTapRecognizer)
+        
+        // setup bubble at first time and minimizable is true
+        if (TPTweakEntry._internal_tptweak_isMinimizable.getValue(Bool.self) ?? false) && !isBubbleSet {
+            Self.setupBubble()
+            isBubbleSet = true
+        }
+    }
+    
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+    }
+    
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        // sync size to child vc
+        viewController?.view.frame = view.bounds
+    }
+    
+    internal required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
-    // MARK: - Function
-
-    private func setupView() {
-        view.addSubview(table)
-
-        NSLayoutConstraint.activate([
-            table.topAnchor.constraint(equalTo: view.topAnchor),
-            table.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            table.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            table.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
+    
+    deinit {
+        if isBubbleSet {
+            Self.destroyBubble()
+        }
     }
     
-    private func setupDefaultNavigationBarItems() {
-        navigationItem.leftBarButtonItems = [doneBarButtonItem]
+    // MARK: - Functions
+    
+    private static func getLayout() -> TPTweakLayout {
+        TPTweakLayout(rawValue: TPTweakEntry._internal_tptweak_layout.getValue(String.self) ?? TPTweakLayout.group.rawValue) ?? .group
+    }
+    
+    private func setupViewController() {
+        // layout value
+        let layout = Self.getLayout()
         
-        if minimizable {
-            navigationItem.leftBarButtonItems?.append(minimizeBarButtonItem)
+        // user change the layout from the settings page.
+        // remove current vc
+        let userChangeLayout = viewController != nil && currentLayout != layout
+        if let vc = viewController, userChangeLayout {
+            vc.willMove(toParent: nil)
+            vc.view.removeFromSuperview()
+            vc.removeFromParent()
         }
         
-        navigationItem.rightBarButtonItems = [settingBarButtonItem, favouriteBarButtonItem]
+        // initial only
+        guard viewController == nil || userChangeLayout else { return }
+        
+        let viewController: UIViewController
+        switch layout {
+        case .flatten:
+            viewController = TPTweakPickerViewController(
+                data: convertEntriesToPickerSection(entries: TPTweakStore.entries.map(\.value), flatten: true),
+                isFavouritePage: false,
+                showAlphabeticSection: true
+            )
+            self.viewController = viewController
+        case .group:
+            viewController = TPTweakGroupViewController()
+            self.viewController = viewController
+        }
+        
+        // add child
+        self.addChild(viewController)
+        view.addSubview(viewController.view)
+        viewController.didMove(toParent: self)
+        
+        if userChangeLayout {
+            // save changes, to detect it later
+            currentLayout = layout
+        }
     }
     
-    private func setupSearchNavigationBarItems() {
-        navigationItem.leftBarButtonItems = [closeSearchBarButtonItem]
-        navigationItem.rightBarButtonItems = []
+    private func setupNavigationBarButton() {
+        if showDefaultDismissButton {
+            navigationItem.leftBarButtonItems = [doneBarButtonItem]
+        }
+        
+        navigationItem.rightBarButtonItems = [
+            settingBarButtonItem,
+            favouriteBarButtonItem
+        ]
+        
+        // setup search
+        navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = true
     }
-
-    private func fetchUserDefinedRows() -> [Row] {
-        var normalizedEntries = [String: [TPTweakEntry]]()
-
-        TPTweakStore.entries
-            .forEach { entry in
-                if normalizedEntries[entry.value.category] == nil {
-                    normalizedEntries[entry.value.category] = []
+    
+    // convert an array of TPTweakEntry to compatible data for TPTweakPickerViewController
+    private func convertEntriesToPickerSection(
+        entries: [TPTweakEntry],
+        flatten: Bool,
+        generateSearchMetadata: Bool = false
+    ) -> [TPTweakPickerViewController.Section] {
+        func _entryName(_ entry: TPTweakEntry) -> String {
+            if flatten {
+                var value = entry.category
+                
+                if !entry.section.isEmpty && entry.section != "" {
+                    value += " - " + entry.section
                 }
-
-                normalizedEntries[entry.value.category]?.append(entry.value)
+                
+                return value
+            } else {
+                return entry.cell
             }
-
-        let rows = normalizedEntries
-            .lazy
-            .sorted(by: { $0.key < $1.key }) // sort ascending based on category name
-            .map { key, value in
-                Row(name: key, entries: value)
-            }
-
-        return rows
-    }
-    
-    private func convertRowToSection(row: Row) -> [TPTweakPickerViewController.Section] {
+        }
+        
         var normalizedEntries = [String: [TPTweakEntry]]()
         
-        row.entries
-            .sorted(by: { $0.cell < $1.cell })
+        entries
+            .sorted(by: { _entryName($0) < _entryName($1) })
             .forEach { entry in
-                if normalizedEntries[entry.section] == nil {
-                    normalizedEntries[entry.section] = []
+                let entryName = _entryName(entry)
+                if normalizedEntries[entryName] == nil {
+                    normalizedEntries[entryName] = []
                 }
 
-                normalizedEntries[entry.section]?.append(entry)
+                normalizedEntries[entryName]?.append(entry)
             }
 
         let data: [TPTweakPickerViewController.Section] = normalizedEntries
@@ -325,7 +331,8 @@ public final class TPTweakViewController: UIViewController {
                             } else {
                                 return .disclosureIndicator
                             }
-                        }()
+                        }(),
+                        searchMetadata: entry.generateSearchMetadata()
                     ))
 
                     if let footer = entry.footer {
@@ -338,75 +345,49 @@ public final class TPTweakViewController: UIViewController {
         
         return data
     }
-    
-    @objc
-    private func dismissSelf() {
-        if minimizable {
-            guard let tweakViewController = __tweakViewController else { return }
-            let tweakView = tweakViewController.view!
-            
-            UIView.animate(
-                withDuration: 0.3,
-                animations: {
-                    let scale = CGAffineTransform(scaleX: 0.1, y: 0.1)
-                    tweakView.transform = scale
-                    tweakView.alpha = 0.3
-                    tweakView.layoutIfNeeded()
-                },
-                completion: { _ in
-                    tweakView.alpha = 0
-                    let window = UIApplication.shared.keyWindow
-                    window?.rootViewController = __realViewController
-                    
-                    __realViewController = nil
-                    __tweakViewController = nil
-                }
-            )
-        } else {
-            self.dismiss(animated: true)
-        }
+}
+
+// MARK: - IBActions
+
+extension TPTweakViewController {
+    @objc private func dismissSelf() {
+        self.dismiss(animated: true)
     }
     
-    static func topMostController() -> UIViewController? {
-        guard let window = UIApplication.shared.keyWindow, let rootViewController = window.rootViewController else {
-            return nil
-        }
-
-        var topController = rootViewController
-
-        while let newTopController = topController.presentedViewController {
-            topController = newTopController
-        }
-
-        return topController
-    }
-    
-    @objc
-    private func closeSearch() {
-        searchController.isActive = false
-    }
-    
-    @objc
-    private func openSettings() {
+    @objc private func openSettings() {
         let entries: [TPTweakEntry] = [
-            .peepOpacity,
+            ._internal_tptweak_layout,
+            ._internal_tptweak_isMinimizable,
+            ._internal_tptweak_peepOpacity,
             .clearCache
         ]
         
-        let data = convertRowToSection(row: Row(name: "", entries: entries))
+        let data = convertEntriesToPickerSection(entries: entries, flatten: false)
         let viewController = TPTweakPickerViewController(data: data)
         viewController.title = "Settings"
         self.navigationController?.pushViewController(viewController, animated: true)
     }
     
-    @objc
-    private func holdToPeep(_ sender: UILongPressGestureRecognizer) {
-        // only avalable if not minimizable
-        guard minimizable == false else { return }
+    @objc private func openFavourite() {
+        var favouriteEntries: [TPTweakEntry] = TPTweakStore.entries
+            .lazy
+            .filter { $0.value.isFavourite }
+            .map(\.value)
         
+        let data = convertEntriesToPickerSection(entries: favouriteEntries, flatten: false)
+        let viewController = TPTweakPickerViewController(data: data, isFavouritePage: true)
+        viewController.title = "Favourites"
+        self.navigationController?.pushViewController(viewController, animated: true)
+    }
+    
+    @objc private func closeSearch() {
+        searchController.isActive = false
+    }
+    
+    @objc private func holdToPeep(_ sender: UILongPressGestureRecognizer) {
         if (sender.state == .began) {
-            let opacity = TPTweakEntry.peepOpacity.getValue(Double.self) ?? 0.25
-            
+            let opacity = TPTweakEntry._internal_tptweak_peepOpacity.getValue(Double.self) ?? 0.25
+
             navigationController?.navigationBar.alpha = opacity
             navigationController?.viewControllers.forEach({ vc in
                 vc.view.alpha = opacity
@@ -418,126 +399,27 @@ public final class TPTweakViewController: UIViewController {
             })
         }
     }
-                                                                      
-    @objc
-    private func openFavourite() {
-        var favouriteEntries = [TPTweakEntry]()
-        for row in data {
-            favouriteEntries += row.entries.filter { TPTweakPickerViewController.isFavourite(identifier: $0.getIdentifier()) }
-        }
-        
-        let data = convertRowToSection(row: Row(name: "", entries: favouriteEntries))
-        let favouriteViewController = TPTweakPickerViewController(data: data, isFavouritePage: true)
-        favouriteViewController.title = "Favourites"
-        self.navigationController?.pushViewController(favouriteViewController, animated: true)
-    }
     
-    @objc
     private func minimize() {
-        Self.minimize()
+        Self.minimizeTweaks(self.navigationController ?? self)
     }
 }
 
-extension TPTweakViewController: UITableViewDataSource, UITableViewDelegate {
-    public func tableView(_: UITableView, numberOfRowsInSection section: Int) -> Int {
-        data.count
-    }
-
-    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell") else {
-            return UITableViewCell()
-        }
-        
-        cell.textLabel?.text = data[indexPath.row].name
-        cell.accessoryType = .disclosureIndicator
-        return cell
-    }
-
-    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        
-        let cell = data[indexPath.row]
-        let data = convertRowToSection(row: cell)
-
-        let viewController = TPTweakPickerViewController(data: data)
-        viewController.title = cell.name
-        navigationController?.pushViewController(viewController, animated: true)
-    }
-    
-    public func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        "Tweaks"
-    }
-}
-
-extension TPTweakViewController: UISearchControllerDelegate {
-    public func presentSearchController(_ searchController: UISearchController) {
-        setupSearchNavigationBarItems()
-        
-        var sections = [TPTweakPickerViewController.Section]()
-        
-        for row in data {
-            sections.append(contentsOf: convertRowToSection(row: row))
-        }
-        
-        searchResultViewController.setData(data: sections)
-    }
-    
-    public func willDismissSearchController(_ searchController: UISearchController) {
-        setupDefaultNavigationBarItems()
-    }
-}
+// MARK: - minimizable
+internal var __tweakViewController: UIViewController?
+internal var __bubbleView: UIView?
 
 extension TPTweakViewController {
-    internal struct Row {
-        internal let name: String
-        internal let entries: [TPTweakEntry]
-    }
-}
-
-// minimizable
-extension TPTweakViewController {
-    /// run this command to show TPTweakViewController that have minimizable capability
-    public static func presentMinimizableTweaks() {
-        let window = UIApplication.shared.keyWindow
-        __realViewController = window?.rootViewController
-        window?.rootViewController = nil
-        
-        let tweakViewController = TPTweakWithNavigatationViewController()
-        tweakViewController.tweakViewController.minimizable = true
-        __tweakViewController = tweakViewController
-        window?.rootViewController = tweakViewController
-        
-        let tweakView = tweakViewController.view!
-        tweakView.alpha = 0
-        
-        UIView.animate(
-            withDuration: 0,
-            animations: {
-                let scale = CGAffineTransform(scaleX: 0.8, y: 0.8)
-                tweakView.transform = scale
-                tweakView.layoutIfNeeded()
-            },
-            completion: { _ in
-                UIView.animate(
-                    withDuration: 0.3,
-                    animations: {
-                        tweakView.alpha = 1
-                        tweakView.transform = CGAffineTransform.identity
-                        tweakView.layoutIfNeeded()
-                    }
-                )
-            }
-        )
+    private static var isMinimize: Bool {
+        __tweakViewController != nil
     }
     
-    @objc
-    internal static func minimize() {
-        guard 
-            let tweakViewController = __tweakViewController,
-            let realViewController = __realViewController
-        else { return }
-        let tweakView = tweakViewController.view!
+    private static func minimizeTweaks(_ reference: UIViewController) {
+        __tweakViewController = reference
         
+        let tweakView = reference.view!
+        
+        // animate minimize to bubble position
         UIView.animate(
             withDuration: 0.3,
             animations: {
@@ -553,53 +435,59 @@ extension TPTweakViewController {
             },
             completion: { _ in
                 tweakView.alpha = 0
-                let window = UIApplication.shared.keyWindow
-                window?.rootViewController = realViewController
-                
-                setupBubble()
+                reference.dismiss(animated: true)
             }
         )
     }
     
-    @objc
-    public static func restoreTweaks() {
-        guard let tweakViewController = __tweakViewController else { return }
+    @discardableResult
+    private static func restoreTweaks() -> Bool {
+        guard let tweakViewController = __tweakViewController else { return false }
         let tweakView = tweakViewController.view!
+        let bubblePosition = getBubblePosition()
+        
+        tweakView.alpha = 0
+        UIApplication.topViewController()?.present(tweakViewController, animated: true)
         
         UIView.animate(
             withDuration: 0.3,
             animations: {
-                __bubbleView?.alpha = 0
                 tweakView.transform = CGAffineTransform.identity
                 tweakView.alpha = 1
             },
             completion: { _ in
-                __bubbleView?.alpha = 0
-                __bubbleView?.removeFromSuperview()
-                __bubbleView = nil
-                
-                let window = UIApplication.shared.keyWindow
-                window?.rootViewController = tweakViewController
+                tweakView.layoutIfNeeded()
+                __tweakViewController = nil
             }
         )
+        
+        return true
     }
-}
-
-// bubble view
-extension TPTweakViewController {
+    
     private static func getBubblePosition() -> CGPoint {
-        let x = UserDefaults.standard.object(forKey: "panel_frame_x") as? CGFloat ?? 0
-        let y = UserDefaults.standard.object(forKey: "panel_frame_y") as? CGFloat ?? 500
+        let x = TPTweakStore.environment.provider().object(forKey: "panel_frame_x") as? CGFloat ?? 0
+        let y = TPTweakStore.environment.provider().object(forKey: "panel_frame_y") as? CGFloat ?? 500
         
         return CGPoint(x: x, y: y)
     }
     
+    private static func setBubblePosition(_ position: CGPoint) {
+        TPTweakStore.environment.provider().setValue(position.x, forKey: "panel_frame_x")
+        TPTweakStore.environment.provider().setValue(position.y, forKey: "panel_frame_y")
+    }
+    
     private static func setupBubble() {
+        // if buble is created multiple time, make sure only the last one is valid
+        if let previousBubble = __bubbleView {
+            previousBubble.removeFromSuperview()
+            __bubbleView = nil
+        }
+        
         let subview: UIView
         if #available(iOS 13.0, *) {
             let image = UIImageView(frame: .init(x: 0, y: 0, width: 50, height: 50))
             image.contentMode = .center
-            image.image = UIImage(systemName: "arrow.up.left.and.arrow.down.right", withConfiguration: UIImage.SymbolConfiguration(pointSize: 18))
+            image.image = UIImage(systemName: "arrow.down.right.and.arrow.up.left", withConfiguration: UIImage.SymbolConfiguration(pointSize: 18))
             image.tintColor = .systemGray6
             subview = image
         } else {
@@ -613,6 +501,7 @@ extension TPTweakViewController {
         let bubble = UIView(frame: .init(x: lastPosition.x, y: lastPosition.y, width: 50, height: 50))
         bubble.backgroundColor = .systemGray
         
+//        bubble.layer.zPosition = CGFloat(Float.greatestFiniteMagnitude)
         bubble.alpha = 0.9
         bubble.layer.cornerRadius = 25
         bubble.addSubview(subview)
@@ -629,6 +518,15 @@ extension TPTweakViewController {
         UIApplication.shared.keyWindow?.addSubview(bubble)
     }
     
+    private static func destroyBubble() {
+        UIView.animate(withDuration: 0.3) {
+            __bubbleView?.alpha = 0
+        } completion: { _ in
+            __bubbleView?.removeFromSuperview()
+            __bubbleView = nil
+        }
+    }
+    
     @objc
     private static func panEvent(ges: UIPanGestureRecognizer) {
         if let view = ges.view {
@@ -638,17 +536,64 @@ extension TPTweakViewController {
             if ges.state == .ended {
                 view.alpha = 0.9
                 view.center = .init(x:  point.x < screenWidth / 2 ? (25) : (screenWidth - 25), y: point.y)
-                UserDefaults.standard.setValue(view.frame.origin.x, forKey: "panel_frame_x")
-                UserDefaults.standard.setValue(view.frame.origin.y, forKey: "panel_frame_y")
+                setBubblePosition(CGPoint(x: view.frame.origin.x, y: view.frame.origin.y))
             } else {
                 view.center = point
             }
         }
     }
+    
+    private static let minimizeNotificationCenterKey = Notification.Name(rawValue: "com.TPTweak.minimizeNotificationCenterKey")
 
     @objc
     private static func tapEvent(ges: UITapGestureRecognizer) {
-        restoreTweaks()
+        let bubbleImageView = (__bubbleView?.subviews.first as? UIImageView)
+        if isMinimize {
+            // if restore is successfull
+            if restoreTweaks() {
+                bubbleImageView?.image = UIImage(systemName: "arrow.down.right.and.arrow.up.left")
+                
+                // reinit to make the bubble view on top of the UI
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    if let bubbleView = __bubbleView {
+                        bubbleView.removeFromSuperview()
+                        UIApplication.shared.keyWindow?.addSubview(bubbleView)
+                    }
+                }
+            }
+        } else {
+            bubbleImageView?.image = UIImage(systemName: "arrow.up.left.and.arrow.down.right")
+            NotificationCenter.default.post(name: minimizeNotificationCenterKey, object: nil)
+        }
     }
 }
-#endif
+
+// MARK: - Search Delegate
+
+extension TPTweakViewController: UISearchControllerDelegate {
+    private func setupSearchNavigationBarItems() {
+        navigationItem.leftBarButtonItems = [closeSearchBarButtonItem]
+        navigationItem.rightBarButtonItems = []
+    }
+    
+    public func presentSearchController(_ searchController: UISearchController) {
+        setupSearchNavigationBarItems()
+        
+        // non blocking
+        DispatchQueue.global(qos: .userInteractive).async { [weak self] in
+            guard let self else { return }
+            var sections = self.convertEntriesToPickerSection(
+                entries: TPTweakStore.entries.map(\.value),
+                flatten: false
+            )
+            
+            DispatchQueue.main.async {
+                self.searchResultViewController.setData(data: sections)
+            }
+        }
+    }
+    
+    public func willDismissSearchController(_ searchController: UISearchController) {
+        setupNavigationBarButton()
+    }
+}
