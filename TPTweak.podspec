@@ -4,7 +4,8 @@ Pod::Spec.new do |spec|
   spec.summary          = "TPTweak is a debugging tool to help adjust your iOS app on the fly without recompile"
 
   spec.license          = { :type => "Apache 2.0", :file => "LICENSE.md" }
-  spec.author           = { "Wendy Liga" => "wendy.liga@tokopedia.com" }
+  spec.author           = { "Wendy Liga" => "wendy.liga@tokopedia.com",
+                            "Wendy Liga" => "me@wendyliga.com" }
   spec.homepage         = "https://github.com/tokopedia/ios-tptweak"
 
   spec.platform         = :ios, "11.0"
