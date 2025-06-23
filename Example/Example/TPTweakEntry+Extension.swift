@@ -59,7 +59,7 @@ extension TPTweakEntry {
         section: "Locale",
         cell: "Using Locale",
         footer: "Enabled this to let the tracker send data about your locale",
-        type: .switch(defaultValue: false, closure: { isUsingLocale in
+        type: .switch(defaultValue: false, completion: { isUsingLocale in
             if isUsingLocale {
                 UserDefaults.standard.set(Locale.current.identifier, forKey: "tracker_locale")
             } else {

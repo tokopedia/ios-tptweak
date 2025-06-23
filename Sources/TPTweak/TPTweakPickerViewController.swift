@@ -181,8 +181,8 @@ internal final class TPTweakPickerViewController: UIViewController {
         
         // update data
         if isFavouritePage {
-            for (offset, section) in zip(_data.indices, _data) {
-                for (rowOffset, row) in zip(section.cells.indices, section.cells) where row.identifer == identifier {
+            for section in _data {
+                for row in section.cells where row.identifer == identifier {
                     // create new cell without the removed favourite
                     var newCells = section.cells
                     newCells.removeAll(where: { $0.identifer == identifier })
@@ -300,8 +300,8 @@ extension TPTweakPickerViewController: UITableViewDataSource, UITableViewDelegat
                 image.tintColor = .systemGray
                 
                 paddingView.addSubview(image)
-                image.widthAnchor.constraint(equalToConstant: size)
-                image.heightAnchor.constraint(equalToConstant: size)
+                image.widthAnchor.constraint(equalToConstant: size).isActive = true
+                image.heightAnchor.constraint(equalToConstant: size).isActive = true
                 image.centerXAnchor.constraint(equalTo: paddingView.centerXAnchor).isActive = true
                 image.bottomAnchor.constraint(equalTo: emptyLabel.topAnchor, constant: -8).isActive = true
             }

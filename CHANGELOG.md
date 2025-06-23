@@ -1,3 +1,11 @@
+# 3.0.0
+- Add new Flatten home design.
+- Expose TPTweakStore environment.
+- Expose internal setting TPTweakEntry
+- Fix sometimes accessorry cell type is rendered inaccurately.
+- Improve Minimizable 
+- remove `DevTools` subpsec as it is replace with exposed TPTWeakStore environment.
+
 # 2.0.2
 - Add `DevTools` subspec to give developer more control whether to enable TPTweak or not.
 

@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(UIKit)
+import UIKit
+
 public final class TPTweakWithNavigatationViewController: UINavigationController {
     
     // MARK: - Life Cycle
@@ -131,7 +134,6 @@ public final class TPTweakViewController: UIViewController {
         searchController.searchBar.placeholder = " Search..."
         searchController.searchBar.searchBarStyle = .prominent
         searchController.searchBar.isTranslucent = false
-        searchController.dimsBackgroundDuringPresentation = false
         searchController.hidesNavigationBarDuringPresentation = false
         searchController.searchBar.sizeToFit()
         
@@ -369,7 +371,7 @@ extension TPTweakViewController {
     }
     
     @objc private func openFavourite() {
-        var favouriteEntries: [TPTweakEntry] = TPTweakStore.entries
+        let favouriteEntries: [TPTweakEntry] = TPTweakStore.entries
             .lazy
             .filter { $0.value.isFavourite }
             .map(\.value)
@@ -444,7 +446,6 @@ extension TPTweakViewController {
     private static func restoreTweaks() -> Bool {
         guard let tweakViewController = __tweakViewController else { return false }
         let tweakView = tweakViewController.view!
-        let bubblePosition = getBubblePosition()
         
         tweakView.alpha = 0
         UIApplication.topViewController()?.present(tweakViewController, animated: true)
@@ -551,7 +552,10 @@ extension TPTweakViewController {
         if isMinimize {
             // if restore is successfull
             if restoreTweaks() {
-                bubbleImageView?.image = UIImage(systemName: "arrow.down.right.and.arrow.up.left")
+                // below iOS 13.0 will get blank page
+                if #available(iOS 13.0, *) {
+                    bubbleImageView?.image = UIImage(systemName: "arrow.down.right.and.arrow.up.left")
+                }
                 
                 // reinit to make the bubble view on top of the UI
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -562,7 +566,9 @@ extension TPTweakViewController {
                 }
             }
         } else {
-            bubbleImageView?.image = UIImage(systemName: "arrow.up.left.and.arrow.down.right")
+            if #available(iOS 13.0, *) {
+                bubbleImageView?.image = UIImage(systemName: "arrow.up.left.and.arrow.down.right")
+            }
             NotificationCenter.default.post(name: minimizeNotificationCenterKey, object: nil)
         }
     }
@@ -582,7 +588,7 @@ extension TPTweakViewController: UISearchControllerDelegate {
         // non blocking
         DispatchQueue.global(qos: .userInteractive).async { [weak self] in
             guard let self else { return }
-            var sections = self.convertEntriesToPickerSection(
+            let sections = self.convertEntriesToPickerSection(
                 entries: TPTweakStore.entries.map(\.value),
                 flatten: false
             )
@@ -597,3 +603,4 @@ extension TPTweakViewController: UISearchControllerDelegate {
         setupNavigationBarButton()
     }
 }
+#endif

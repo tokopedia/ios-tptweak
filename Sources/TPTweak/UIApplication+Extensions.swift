@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(UIKit)
+import UIKit
+
 extension UIApplication {
     internal class func topViewController(controller: UIViewController? = UIApplication.shared.keyWindow?.rootViewController) -> UIViewController? {
         if let navigationController = controller as? UINavigationController {
@@ -28,4 +31,5 @@ extension UIApplication {
         return controller
     }
 }
+#endif
 

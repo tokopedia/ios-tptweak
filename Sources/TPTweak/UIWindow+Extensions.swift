@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if canImport(UIKit)
+import UIKit
+
 extension UIWindow {
     internal func topViewController() -> UIViewController? {
         var top: UIViewController? = rootViewController
@@ -29,3 +32,4 @@ extension UIWindow {
         return top
     }
 }
+#endif

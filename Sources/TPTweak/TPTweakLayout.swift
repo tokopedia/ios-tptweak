@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
+#if canImport(UIKit)
 public enum TPTweakLayout: String, CaseIterable {
     case group = "Group"
     case flatten = "Flatten"
 }
+#endif
