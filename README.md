@@ -30,10 +30,18 @@ or manually add to your `Package.swift`
 .package(url: "https://github.com/tokopedia/ios-tptweak", from: "3.0.0"),
 ```
 
-# Cocoapods
+## Cocoapods
 add this to your `Podfile`
 ```
 pod 'TPTweak', '~> 3.0.0'
+```
+
+# Development
+TPTweak is written in Swift, so you need to have Xcode 14+ to build it.
+
+run this command to open the project with the example project.
+```bash
+xed TPTweak.xcworkspace
 ```
 
 # Nomenclature
