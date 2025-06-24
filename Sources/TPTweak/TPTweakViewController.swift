@@ -65,6 +65,7 @@ public final class TPTweakViewController: UIViewController {
     
     private weak var viewController: UIViewController?
     private var currentLayout: TPTweakLayout
+    private var currentIsMinimizable: Bool
     private var isBubbleSet: Bool = false
     
     private lazy var holdToPeepTapRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(holdToPeep))
@@ -144,6 +145,7 @@ public final class TPTweakViewController: UIViewController {
     
     public init(showDefaultDismissButton: Bool = false) {
         self.currentLayout = Self.getLayout()
+        self.currentIsMinimizable = Self.getIsMinimizableEnabled()
         self.showDefaultDismissButton = showDefaultDismissButton
         
         super.init(nibName: nil, bundle: nil)
@@ -173,32 +175,31 @@ public final class TPTweakViewController: UIViewController {
         }
     }
     
-    public override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-    }
-
-    
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        // update if design is changed from Settings page.
         setupViewController()
         
         // register navigation bar button
         setupNavigationBarButton()
         
-        // register gesture
-        navigationController?.navigationBar.isUserInteractionEnabled = true
-        navigationController?.navigationBar.addGestureRecognizer(holdToPeepTapRecognizer)
-        
-        // setup bubble at first time and minimizable is true
-        if (TPTweakEntry._internal_tptweak_isMinimizable.getValue(Bool.self) ?? false) && !isBubbleSet {
-            Self.setupBubble()
-            isBubbleSet = true
-        }
+        // setup bubble view
+        setupBubbleIfNeccessary()
     }
     
-    public override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
+    public override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        // make sure bubble and __tweakViewController not in limbo state
+        if (isBeingDismissed || navigationController?.isBeingDismissed == true) {
+            // if minimize, skip
+            guard __tweakViewController == nil else { return }
+            
+            if isBubbleSet {
+                Self.destroyBubble()
+            }
+        }
     }
     
     public override func viewDidLayoutSubviews() {
@@ -210,12 +211,6 @@ public final class TPTweakViewController: UIViewController {
     
     internal required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-    
-    deinit {
-        if isBubbleSet {
-            Self.destroyBubble()
-        }
     }
     
     // MARK: - Functions
@@ -278,6 +273,47 @@ public final class TPTweakViewController: UIViewController {
         // setup search
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = true
+        
+        // register gesture
+        navigationController?.navigationBar.isUserInteractionEnabled = true
+        navigationController?.navigationBar.addGestureRecognizer(holdToPeepTapRecognizer)
+    }
+    
+    private func setupBubbleIfNeccessary() {
+        func isModal() -> Bool {
+            let presentingIsModal = presentingViewController != nil
+            let presentingIsNavigation = navigationController?.presentingViewController?.presentedViewController == navigationController
+            let presentingIsTabBar = tabBarController?.presentingViewController is UITabBarController
+            
+            return presentingIsModal || presentingIsNavigation || presentingIsTabBar
+        }
+        
+        // minimize only works if TPTweakViewController is present and not pushed
+        guard isModal() else {
+            Self.destroyBubble()
+            return
+        }
+        
+        let isEnabled = Self.getIsMinimizableEnabled()
+        let isMinimizableChanged = currentIsMinimizable != isEnabled
+        
+        if !isBubbleSet && isEnabled {
+            Self.setupBubble()
+            isBubbleSet = true
+            currentIsMinimizable = isEnabled
+        }
+        
+        if isMinimizableChanged {
+            if isEnabled {
+                Self.setupBubble()
+                isBubbleSet = true
+            } else {
+                Self.destroyBubble()
+                isBubbleSet = false
+            }
+            
+            currentIsMinimizable = isEnabled
+        }
     }
     
     // convert an array of TPTweakEntry to compatible data for TPTweakPickerViewController
@@ -408,12 +444,34 @@ extension TPTweakViewController {
 }
 
 // MARK: - minimizable
+
 internal var __tweakViewController: UIViewController?
 internal var __bubbleView: UIView?
+internal var __setupNavigationSwizzle: Bool = false
 
 extension TPTweakViewController {
-    private static var isMinimize: Bool {
+    internal static var isMinimize: Bool {
         __tweakViewController != nil
+    }
+    
+    private static func getIsMinimizableEnabled() -> Bool {
+        TPTweakEntry._internal_tptweak_isMinimizable.getValue(Bool.self) ?? false
+    }
+    
+    private static func swizzleNavigationIfNeccessary() {
+        guard !__setupNavigationSwizzle else { return }
+        __setupNavigationSwizzle = true
+        
+        func swizzle(fromClass: AnyClass, originalSelector: Selector, swizzledSelector: Selector) {
+            guard let originalMethod = class_getInstanceMethod(fromClass, originalSelector),
+                  let swizzledMethod = class_getInstanceMethod(fromClass, swizzledSelector) else {
+                return
+            }
+            method_exchangeImplementations(originalMethod, swizzledMethod)
+        }
+        
+        // set swizzle
+        swizzle(fromClass: UINavigationController.self, originalSelector: #selector(UINavigationController.viewDidDisappear(_:)), swizzledSelector: #selector(UINavigationController.__viewDidDisappear(_:)))
     }
     
     private static func minimizeTweaks(_ reference: UIViewController) {
@@ -484,6 +542,9 @@ extension TPTweakViewController {
             __bubbleView = nil
         }
         
+        // swizzle navigation for minimizable
+        Self.swizzleNavigationIfNeccessary()
+        
         let subview: UIView
         if #available(iOS 13.0, *) {
             let image = UIImageView(frame: .init(x: 0, y: 0, width: 50, height: 50))
@@ -502,7 +563,6 @@ extension TPTweakViewController {
         let bubble = UIView(frame: .init(x: lastPosition.x, y: lastPosition.y, width: 50, height: 50))
         bubble.backgroundColor = .systemGray
         
-//        bubble.layer.zPosition = CGFloat(Float.greatestFiniteMagnitude)
         bubble.alpha = 0.9
         bubble.layer.cornerRadius = 25
         bubble.addSubview(subview)
@@ -526,6 +586,11 @@ extension TPTweakViewController {
             __bubbleView?.removeFromSuperview()
             __bubbleView = nil
         }
+    }
+    
+    internal static func destroyMinimizable() {
+        __tweakViewController = nil
+        destroyBubble()
     }
     
     @objc

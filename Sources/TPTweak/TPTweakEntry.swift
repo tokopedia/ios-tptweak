@@ -162,6 +162,7 @@ extension TPTweakEntry {
             category: "_tptweak",
             section: "Layout",
             cell: "Minimizable",
+            footer: "Only available when TPTweak is presented and not pushed.",
             type: TPTweakEntryType.switch(defaultValue: false, completion: nil)
         )
     }
