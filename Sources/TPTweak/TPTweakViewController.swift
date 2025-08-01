@@ -655,7 +655,7 @@ extension TPTweakViewController: UISearchControllerDelegate {
             guard let self else { return }
             let sections = self.convertEntriesToPickerSection(
                 entries: TPTweakStore.entries.map(\.value),
-                flatten: false
+                flatten: true
             )
             
             DispatchQueue.main.async {
