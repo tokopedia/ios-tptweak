@@ -1,3 +1,6 @@
+# 3.1.1
+- expose environment
+
 # 3.1.0
 - use flatten section on search
 - add options to always show search bar
