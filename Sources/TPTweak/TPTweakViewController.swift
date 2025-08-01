@@ -272,7 +272,7 @@ public final class TPTweakViewController: UIViewController {
         
         // setup search
         navigationItem.searchController = searchController
-        navigationItem.hidesSearchBarWhenScrolling = true
+        navigationItem.hidesSearchBarWhenScrolling = !(TPTweakEntry._internal_tptweak_always_show_search_bar.getValue(Bool.self) ?? false)
         
         // register gesture
         navigationController?.navigationBar.isUserInteractionEnabled = true
@@ -332,7 +332,7 @@ public final class TPTweakViewController: UIViewController {
                 
                 return value
             } else {
-                return entry.cell
+                return entry.section
             }
         }
         
@@ -396,6 +396,7 @@ extension TPTweakViewController {
         let entries: [TPTweakEntry] = [
             ._internal_tptweak_layout,
             ._internal_tptweak_isMinimizable,
+            ._internal_tptweak_always_show_search_bar,
             ._internal_tptweak_peepOpacity,
             .clearCache
         ]
