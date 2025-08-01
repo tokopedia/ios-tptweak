@@ -353,9 +353,10 @@ public final class TPTweakViewController: UIViewController {
             .sorted(by: { $0.key < $1.key })
             .map { key, value in
                 var footers = [String]()
+                let sortedValue = value.sorted(by: { $0.cell < $1.cell })
                 var cells = [TPTweakPickerViewController.Cell]()
 
-                for entry in value {
+                for entry in sortedValue {
                     cells.append(TPTweakPickerViewController.Cell(
                         name: entry.cell,
                         identifer: entry.getIdentifier(),
