@@ -1,3 +1,9 @@
+# 3.1.0
+- use flatten section on search
+- add options to always show search bar
+- fix wrong section name on setting, favourite and search
+- sort cell inside flatten section by name
+
 # 3.0.0
 - Add new Flatten home design.
 - Expose TPTweakStore environment.
