@@ -166,6 +166,16 @@ extension TPTweakEntry {
             type: TPTweakEntryType.switch(defaultValue: false, completion: nil)
         )
     }
+
+    public static var _internal_tptweak_always_show_search_bar: TPTweakEntry {
+        TPTweakEntry(
+            category: "_tptweak",
+            section: "Layout",
+            cell: "Always Show Search Bar",
+            footer: "",
+            type: TPTweakEntryType.switch(defaultValue: false, completion: nil)
+        )
+    }
 }
 
 // MARK: - indentifier helper
