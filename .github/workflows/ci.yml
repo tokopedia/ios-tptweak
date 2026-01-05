@@ -21,38 +21,11 @@ jobs:
       - uses: actions/checkout@v2
       - name: Run tests
         run: swift test --enable-test-discovery --enable-code-coverage | xcpretty
-  build-ventura:
-    strategy:
-      matrix:
-        xcode:
-          - '14.3.1'
-          - '15.2'
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v2
-      - name: Select Xcode ${{ matrix.xcode }}
-        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
-      - name: Run Build
-        run: swift build
-  unit_test-ventura:
-    strategy:
-      matrix:
-        xcode:    
-          - '14.3.1'     
-          - '15.2'
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v2
-      - name: Select Xcode ${{ matrix.xcode }}
-        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
-      - name: Run tests
-        run: swift test --enable-test-discovery --enable-code-coverage | xcpretty
   build-sonoma:
     strategy:
       matrix:
         xcode:
           - '15.4'
-          - '16.1'
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v2
@@ -65,8 +38,57 @@ jobs:
       matrix:
         xcode:    
           - '15.4'
-          - '16.1'
     runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v2
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Run tests
+        run: swift test --enable-test-discovery --enable-code-coverage | xcpretty
+
+  build-sequioa:
+    strategy:
+      matrix:
+        xcode:
+          - '16.4'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v2
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Run Build
+        run: swift build
+  unit_test-sequioa:
+    strategy:
+      matrix:
+        xcode:    
+          - '16.4'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v2
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Run tests
+        run: swift test --enable-test-discovery --enable-code-coverage | xcpretty
+  
+  build-tahoe:
+    strategy:
+      matrix:
+        xcode:
+          - '26.0'
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v2
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Run Build
+        run: swift build
+  unit_test-tahoe:
+    strategy:
+      matrix:
+        xcode:    
+          - '26.0'
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v2
       - name: Select Xcode ${{ matrix.xcode }}

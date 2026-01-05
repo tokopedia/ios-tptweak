@@ -57,6 +57,10 @@ public final class TPTweakGroupViewController: UIViewController {
 
         setupView()
         
+        if #available(iOS 11.0, *) {
+            table.contentInsetAdjustmentBehavior = .always
+        }
+        
         data = fetchUserDefinedRows()
 
         table.reloadData()

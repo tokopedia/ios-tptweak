@@ -115,16 +115,29 @@ internal final class TPTweakPickerViewController: UIViewController {
 
     override internal func viewDidLoad() {
         super.viewDidLoad()
-        table.reloadData()
-    }
-
-    override internal func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
         
-        if #available(iOS 12.0, *) {
-            navigationController?.navigationBar.prefersLargeTitles = false
-            navigationController?.navigationItem.largeTitleDisplayMode = .never
+        if #available(iOS 11.0, *) {
+            table.contentInsetAdjustmentBehavior = .always
         }
+        
+        if #available(iOS 13.0, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithDefaultBackground()
+            appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+            appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
+            
+            navigationItem.standardAppearance = appearance
+            navigationItem.compactAppearance = appearance
+            
+            let scrollEdgeAppearance = UINavigationBarAppearance()
+            scrollEdgeAppearance.configureWithTransparentBackground()
+            scrollEdgeAppearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+            scrollEdgeAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
+            
+            navigationItem.scrollEdgeAppearance = scrollEdgeAppearance
+        }
+        
+        table.reloadData()
     }
 
     internal required init?(coder _: NSCoder) {

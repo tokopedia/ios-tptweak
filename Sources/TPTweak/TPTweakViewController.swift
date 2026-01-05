@@ -30,17 +30,10 @@ public final class TPTweakWithNavigatationViewController: UINavigationController
         }
     
         if #available(iOS 12.0, *) {
-            navigationBar.prefersLargeTitles = false
+            navigationBar.prefersLargeTitles = true
         }
         
-        navigationBar.isTranslucent = false
-
-        if #available(iOS 13.0, *) {
-            navigationBar.tintColor = .systemBlue
-            navigationBar.titleTextAttributes = [.foregroundColor: UIColor.label]
-            navigationBar.barTintColor = .systemGroupedBackground
-            navigationBar.backgroundColor = .systemGroupedBackground
-        }
+        navigationBar.isTranslucent = true
     }
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -134,7 +127,7 @@ public final class TPTweakViewController: UIViewController {
         searchController.delegate = self
         searchController.searchBar.placeholder = " Search..."
         searchController.searchBar.searchBarStyle = .prominent
-        searchController.searchBar.isTranslucent = false
+        searchController.searchBar.isTranslucent = true
         searchController.hidesNavigationBarDuringPresentation = false
         searchController.searchBar.sizeToFit()
         
@@ -161,8 +154,29 @@ public final class TPTweakViewController: UIViewController {
         super.viewDidLoad()
         
         if #available(iOS 11.0, *) {
+            navigationController?.navigationBar.prefersLargeTitles = false
             navigationItem.largeTitleDisplayMode = .never
         }
+
+        if #available(iOS 13.0, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithDefaultBackground()
+            appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+            appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
+            
+            navigationItem.standardAppearance = appearance
+            navigationItem.compactAppearance = appearance
+            
+            let scrollEdgeAppearance = UINavigationBarAppearance()
+            scrollEdgeAppearance.configureWithTransparentBackground()
+            scrollEdgeAppearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+            scrollEdgeAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
+            
+            navigationItem.scrollEdgeAppearance = scrollEdgeAppearance
+        }
+
+        // enable extending bottom content to create overflow effect with tabbar in ios 26 liquid glass
+        edgesForExtendedLayout = [.bottom, .top]
         
         // listen to minimize the view controller
         NotificationCenter.default.addObserver(
@@ -200,13 +214,6 @@ public final class TPTweakViewController: UIViewController {
                 Self.destroyBubble()
             }
         }
-    }
-    
-    public override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        
-        // sync size to child vc
-        viewController?.view.frame = view.bounds
     }
     
     internal required init?(coder: NSCoder) {
@@ -252,6 +259,15 @@ public final class TPTweakViewController: UIViewController {
         // add child
         self.addChild(viewController)
         view.addSubview(viewController.view)
+        
+        viewController.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            viewController.view.topAnchor.constraint(equalTo: view.topAnchor),
+            viewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            viewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            viewController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
         viewController.didMove(toParent: self)
         
         if userChangeLayout {

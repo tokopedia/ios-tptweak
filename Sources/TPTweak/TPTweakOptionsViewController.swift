@@ -66,6 +66,28 @@ internal final class TPTweakOptionsViewController<ValueType>: UIViewController, 
 
     override internal func viewDidLoad() {
         super.viewDidLoad()
+
+        if #available(iOS 11.0, *) {
+            table.contentInsetAdjustmentBehavior = .always
+        }
+        
+        if #available(iOS 13.0, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithDefaultBackground()
+            appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+            appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
+            
+            navigationItem.standardAppearance = appearance
+            navigationItem.compactAppearance = appearance
+            
+            let scrollEdgeAppearance = UINavigationBarAppearance()
+            scrollEdgeAppearance.configureWithTransparentBackground()
+            scrollEdgeAppearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+            scrollEdgeAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
+            
+            navigationItem.scrollEdgeAppearance = scrollEdgeAppearance
+        }
+        
         table.reloadData()
     }
 
